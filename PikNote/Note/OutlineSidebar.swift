@@ -15,6 +15,8 @@ struct OutlineSidebar: View {
     @Environment(\.dismiss) private var dismiss
     /// 收起的标题（用“级别 + 文字 + 第几次出现”来认，前面加减标题时也不容易认错）
     @State private var collapsed: Set<String> = []
+    /// 当前章节的高亮：换章节时从旧位置滑到新位置
+    @Namespace private var highlight
 
     /// 最浅的那级标题顶格，其他按级别缩进
     private var minLevel: Int { doc.outline.map(\.level).min() ?? 1 }
@@ -98,6 +100,7 @@ struct OutlineSidebar: View {
                                 heading: h,
                                 indent: CGFloat(h.level - minLevel) * 12,
                                 current: h.index == currentVisibleIndex,
+                                highlight: highlight,
                                 foldable: hasChildren(h.index),
                                 folded: collapsed.contains(item.key),
                                 toggle: {
@@ -109,7 +112,8 @@ struct OutlineSidebar: View {
                         }
                     }
                     .padding(.horizontal, 8)
-                    .animation(.easeOut(duration: 0.15), value: collapsed)
+                    .pikAnimation(Motion.quick, value: collapsed)
+                    .pikAnimation(Motion.standard, value: currentVisibleIndex)
                 }
             }
 
@@ -137,6 +141,7 @@ private struct OutlineRow: View {
     let heading: OutlineHeading
     let indent: CGFloat
     let current: Bool
+    let highlight: Namespace.ID
     let foldable: Bool
     let folded: Bool
     let toggle: () -> Void
@@ -173,11 +178,20 @@ private struct OutlineRow: View {
         }
         .padding(.leading, indent)
         .padding(.trailing, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(current ? Color.primary.opacity(0.09) : hovering ? Color.primary.opacity(0.05) : .clear)
-        )
+        .background {
+            ZStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(hovering && !current ? Color.primary.opacity(0.05) : .clear)
+                if current {
+                    // 同一块高亮在各行之间移动，所以换章节时是“滑过去”
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.primary.opacity(0.09))
+                        .matchedGeometryEffect(id: "current", in: highlight)
+                }
+            }
+        }
         .onHover { hovering = $0 }
+        .pikAnimation(Motion.quick, value: hovering)
     }
 }
 
@@ -203,10 +217,11 @@ private struct FooterButton: View {
                 .padding(.vertical, 7)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle(scale: 0.96, cornerRadius: 6))
         .foregroundStyle(hovering ? .primary : .secondary)
         .background(RoundedRectangle(cornerRadius: 6).fill(hovering ? Color.primary.opacity(0.07) : .clear))
         .onHover { hovering = $0 }
+        .pikAnimation(Motion.quick, value: hovering)
         .help(help)
     }
 }

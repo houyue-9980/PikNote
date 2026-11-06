@@ -60,7 +60,7 @@ struct NewNoteSheet: View {
 
     private var preview: some View {
         VStack(spacing: 12) {
-            TileIcon(emoji: emoji, color: color, size: 120)
+            LiveTileIcon(emoji: emoji, color: color, size: 120)
             Text(name.isEmpty ? L("未命名", "Untitled") : name)
                 .font(.headline)
                 .lineLimit(2)
@@ -149,5 +149,27 @@ struct TileIcon: View {
             )
             .frame(width: size, height: size)
             .overlay(Text(emoji).font(.system(size: size * 0.51)))
+    }
+}
+
+/// 预览用的图标：换表情、换底色时轻轻弹一下，颜色渐变过去
+struct LiveTileIcon: View {
+    let emoji: String
+    let color: ShelfColor
+    var size: CGFloat = 78
+    @State private var pop = false
+
+    var body: some View {
+        TileIcon(emoji: emoji, color: color, size: size)
+            .scaleEffect(pop ? 1.08 : 1)
+            .pikAnimation(Motion.standard, value: color)
+            .onChange(of: emoji) { bounce() }
+            .onChange(of: color) { bounce() }
+    }
+
+    private func bounce() {
+        guard !Motion.reduced else { return }
+        withAnimation(.easeOut(duration: 0.08)) { pop = true }
+        withAnimation(Motion.springy.delay(0.08)) { pop = false }
     }
 }

@@ -1,6 +1,7 @@
 // 公式快捷栏：⌘⇧M 弹出，用中文、英文或拼音搜公式，↑↓ 选择，回车插入。
 // 插入后光标停在第一个空，Tab 跳到下一个。输出就是标准的 $...$ / $$...$$。
 
+import { animateIn, animateOut } from './motion.js'
 import { $prose } from '@milkdown/kit/utils'
 import { Plugin } from '@milkdown/kit/prose/state'
 import { renderTeX, openMathEditor } from './math.js'
@@ -23,7 +24,7 @@ export function closeQuickBar(refocus = true) {
   const { root, view, onKey } = bar
   bar = null
   document.removeEventListener('keydown', onKey, true)
-  root.remove()
+  animateOut(root) // 淡出、面板往上收
   if (refocus) view.focus()
 }
 
@@ -67,6 +68,7 @@ export function openQuickBar(view) {
       </div>
     </div>`
   document.body.appendChild(root)
+  animateIn(root) // 背景淡入、面板从上面轻轻落下
 
   const input = root.querySelector('.qb-input')
   const list = root.querySelector('.qb-list')

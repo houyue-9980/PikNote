@@ -26,10 +26,8 @@ struct MarkdownNoteView: View {
         } detail: {
             VStack(spacing: 0) {
                 if let error = doc.errorMessage {
-                    Text(error)
-                        .font(.callout).foregroundStyle(.white)
-                        .frame(maxWidth: .infinity).padding(8)
-                        .background(.red.opacity(0.85))
+                    ErrorBanner(message: error) { doc.errorMessage = nil }
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 FormatBar(doc: doc)
                 Divider()
@@ -38,6 +36,8 @@ struct MarkdownNoteView: View {
                 StatusBar(url: url, trailing: L("\(doc.wordCount) 字", "\(doc.wordCount) words")
                           + (EditorZoom.shared.label.map { " · " + $0 } ?? ""))
             }
+            .pikAnimation(Motion.standard, value: doc.errorMessage)
+            .clipped()
             .pikPageBackground()
         }
         // 标题右边有个小三角：重命名 / 在访达中显示
@@ -48,6 +48,43 @@ struct MarkdownNoteView: View {
             OpenNotes.register(url, document: doc)
         }
         .onDisappear { doc.saveNow() } // 关窗口时，没来得及保存的立刻保存
+    }
+}
+
+/// 顶部的提示条：从上面滑下来，右边有 ✕，8 秒后自己收起
+private struct ErrorBanner: View {
+    let message: String
+    let onClose: () -> Void
+    @State private var hoveringClose = false
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+            Text(message).frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .frame(width: 22, height: 22)
+                    .background(Circle().fill(.white.opacity(hoveringClose ? 0.25 : 0)))
+                    .contentShape(Circle())
+            }
+            .buttonStyle(PressableStyle(cornerRadius: 11))
+            .onHover { hoveringClose = $0 }
+            .pikAnimation(Motion.quick, value: hoveringClose)
+            .help(L("关闭", "Close"))
+        }
+        .font(.callout)
+        .foregroundStyle(.white)
+        .padding(.horizontal, 12).padding(.vertical, 7)
+        .background(Color(red: 0.85, green: 0.30, blue: 0.27))
+        // 换了一条提示就重新计时；鼠标停在提示条上时不收起，方便看完
+        .onHover { hovering = $0 }
+        .task(id: "\(message)|\(hovering)") {
+            guard !hovering else { return }
+            try? await Task.sleep(for: .seconds(8))
+            if !Task.isCancelled { onClose() }
+        }
     }
 }
 

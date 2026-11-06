@@ -72,8 +72,9 @@ struct FormatBar: View {
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                .frame(width: 30, height: 26)
-                .background(RoundedRectangle(cornerRadius: 6).fill(Color.primary.opacity(0.09)))
+                .frame(width: ToolButton.size.width, height: ToolButton.size.height)
+                .background(RoundedRectangle(cornerRadius: 7).fill(Color.primary.opacity(0.09)))
+                .transition(.opacity)
                 .help(L("表格：加减行列", "Table: add or remove rows and columns"))
             } else {
                 tool("tablecells", L("插入表格", "Insert Table"), active: showingTablePicker) { showingTablePicker = true }
@@ -104,7 +105,10 @@ struct FormatBar: View {
             .allowsHitTesting(false)
             .accessibilityHidden(true)
         }
-        .disabled(doc.errorMessage != nil && doc.status.isEmpty)
+        // 在表格里 / 不在表格里：表格按钮换样子时淡入淡出
+        .pikAnimation(Motion.quick, value: f.inTable)
+        // 文件没打开成功（状态是空的）时不能用
+        .disabled(doc.status.isEmpty)
     }
 
     private var separator: some View {
@@ -112,15 +116,7 @@ struct FormatBar: View {
     }
 
     private func tool(_ symbol: String, _ help: String, active: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 13))
-                .frame(width: 30, height: 26)
-                .background(RoundedRectangle(cornerRadius: 6).fill(active ? Color.primary.opacity(0.09) : .clear))
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(help)
+        ToolButton(symbol: symbol, help: help, active: active, action: action)
     }
 
     private var linkPopover: some View {
@@ -195,5 +191,35 @@ struct TableSizePicker: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
+    }
+}
+
+/// 工具栏上的一个按钮：鼠标移上去有淡淡的底色，按下轻轻一缩，选中的底色渐变出现
+private struct ToolButton: View {
+    /// 按钮大小（比图标大一圈，好点中）
+    static let size = CGSize(width: 32, height: 28)
+
+    let symbol: String
+    let help: String
+    let active: Bool
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 13))
+                .frame(width: Self.size.width, height: Self.size.height)
+                .background(
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(Color.primary.opacity(active ? 0.10 : hovering ? 0.05 : 0))
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .onHover { hovering = $0 }
+        .pikAnimation(Motion.quick, value: hovering)
+        .pikAnimation(Motion.quick, value: active)
+        .help(help)
     }
 }

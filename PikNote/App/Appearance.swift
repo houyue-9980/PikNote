@@ -71,7 +71,10 @@ private struct PageBackground: ViewModifier {
 
     func body(content: Content) -> some View {
         // 底色：个性化里设置的（没设置就是主题默认的）
-        content.background(Personalization.shared.backgroundColor(theme: AppearanceSettings.shared.effective(scheme)))
+        let theme = AppearanceSettings.shared.effective(scheme)
+        let color = Personalization.shared.backgroundColor(theme: theme)
+        // 换主题、换底色时，颜色渐变过去
+        content.background { color.pikAnimation(Motion.standard, value: color.description) }
     }
 }
 

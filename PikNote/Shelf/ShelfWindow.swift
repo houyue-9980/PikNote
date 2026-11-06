@@ -22,6 +22,7 @@ struct ShelfWindow: View {
                             ShelfRow(shelf: shelf) { urls in importFiles(urls, into: shelf.url) }
                         }
                     }
+                    .pikAnimation(Motion.standard, value: library.shelves.map(\.id))
                     .padding(.horizontal, 48)
                     .padding(.vertical, 32)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -121,6 +122,8 @@ struct ShelfRow: View {
                         ShelfTile(item: item)
                     }
                 }
+                // 拖动、移进移出时，其他图标平滑让位
+                .pikAnimation(Motion.springy, value: shelf.items.map(\.id))
             }
         }
         .padding(12)
@@ -129,6 +132,7 @@ struct ShelfRow: View {
                 .fill(targeted ? Color.accentColor.opacity(0.08) : .clear)
                 .strokeBorder(targeted ? Color.accentColor.opacity(0.6) : .clear, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
         )
+        .pikAnimation(Motion.quick, value: targeted)
         .padding(-12) // 高亮框往外扩一点，内容位置不变
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }
@@ -155,7 +159,10 @@ struct ShelfTile: View {
     var body: some View {
         VStack(spacing: 10) {
             ZStack(alignment: .bottomTrailing) {
+                // 鼠标移上去：图标轻轻浮起（放大一点 + 一点影子）
                 TileIcon(emoji: item.emoji, color: item.color)
+                    .scaleEffect(hovering ? 1.05 : 1)
+                    .shadow(color: .black.opacity(hovering ? 0.12 : 0), radius: hovering ? 8 : 0, y: hovering ? 4 : 0)
                 if let badge = item.badge {
                     Text(badge)
                         .font(.system(size: 9, weight: .bold))
@@ -183,6 +190,8 @@ struct ShelfTile: View {
         }
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
+        .pikAnimation(Motion.quick, value: hovering)
+        .pikAnimation(Motion.quick, value: dropTargeted)
         .onTapGesture { OpenNotes.open(item.url, using: openWindow) } // 单击在新窗口打开
         // 按住拖：拖到别的书架上就移过去，拖到同一层的别的图标上就调整顺序
         .draggable(item.url) {
@@ -218,7 +227,7 @@ struct ShelfTile: View {
         // 改图标和底色：和书架管理里一样的小窗，关掉时保存
         .popover(isPresented: $editing, arrowEdge: .bottom) {
             HStack(alignment: .top, spacing: 20) {
-                TileIcon(emoji: emoji, color: color, size: 72)
+                LiveTileIcon(emoji: emoji, color: color, size: 72)
                 AppearancePicker(emoji: $emoji, color: $color)
             }
             .padding(18)

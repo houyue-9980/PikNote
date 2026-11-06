@@ -31,6 +31,16 @@
     }
     
     /* 正文字体和行间距可以在 设置 → 个性化 里改 */
+    /* 换主题、换底色时颜色渐变过去，不要一下全变 */
+    /* （表格格子、分界线不加：拖选时选中色要马上跟上鼠标） */
+    body, .ProseMirror h1, .ProseMirror h2, .ProseMirror h3, .ProseMirror h4, .ProseMirror h5,
+    .ProseMirror pre, .ProseMirror blockquote {
+      transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
+    /* 系统设置里要求减弱动态效果：网页里的过渡和动画都关掉（光标闪烁除外） */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
+      #editor.pk-ready .ProseMirror li[data-item-type="task"]::before { animation: none !important; }
+    }
     body { margin: 0; font-size: 15px; line-height: var(--line-height, 1.7);
       font-family: var(--body-font, -apple-system, "PingFang SC", sans-serif); color: var(--text); background: var(--bg); }
     /* 不限制宽度：窗口多宽，一行就写多宽（Markdown 本来就不分页） */
@@ -95,9 +105,12 @@
     .ProseMirror td > p, .ProseMirror th > p { margin: 0; }
     /* 待办：勾选框和文字在同一行 */
     .ProseMirror li[data-item-type="task"] { list-style: none; display: flex; gap: 0.4em; align-items: baseline; margin-left: -1.2em; }
-    .ProseMirror li[data-item-type="task"]::before { content: "☐"; cursor: pointer; }
+    .ProseMirror li[data-item-type="task"]::before { content: "☐"; cursor: pointer; display: inline-block; }
     .ProseMirror li[data-item-type="task"][data-checked="true"]::before { content: "☑"; }
     .ProseMirror li[data-item-type="task"][data-checked="true"] > p { color: var(--faint); text-decoration: line-through; }
+    /* 勾上的那一下：勾选框轻轻弹一下（刚打开笔记时不弹） */
+    #editor.pk-ready .ProseMirror li[data-item-type="task"][data-checked="true"]::before { animation: pk-check .3s ease-out; }
+    @keyframes pk-check { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
 
     /* ---------- 公式 ---------- */
     .math-inline { padding: 0 2px; border-radius: 4px; cursor: default; }
@@ -112,6 +125,9 @@
     /* 双击公式弹出的编辑框 */
     .math-editor { position: absolute; z-index: 20; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
       box-shadow: var(--shadow); padding: 10px; box-sizing: border-box; }
+    /* 双击公式弹出的编辑框：淡入、往下滑一点点 */
+    .math-editor { transition: opacity .16s ease, transform .18s cubic-bezier(.2, .8, .2, 1); }
+    .math-editor.pk-enter, .math-editor.pk-leave { opacity: 0; transform: translateY(-6px); }
     .math-editor-preview { text-align: center; padding: 8px 4px 10px; min-height: 28px; overflow-x: auto; }
     .math-editor textarea { width: 100%; box-sizing: border-box; resize: none; border: 1px solid var(--panel-border); background: var(--bg); color: var(--text); border-radius: 7px;
       padding: 7px 9px; font: 13px/1.5 ui-monospace, Menlo, monospace; outline: none; }
@@ -119,6 +135,11 @@
     .math-editor-hint { font-size: 11px; color: var(--faint); margin-top: 6px; }
 
     /* ---------- 公式快捷栏（⌘⇧M） ---------- */
+    /* 打开：背景淡入，面板从上面轻轻落下；关闭反过来 */
+    .qb-backdrop { transition: opacity .18s ease; }
+    .qb-backdrop .qb { transition: transform .22s cubic-bezier(.2, .8, .2, 1), opacity .18s ease; }
+    .qb-backdrop.pk-enter, .qb-backdrop.pk-leave { opacity: 0; }
+    .qb-backdrop.pk-enter .qb, .qb-backdrop.pk-leave .qb { transform: translateY(-14px) scale(.98); opacity: 0; }
     .qb-backdrop { position: fixed; inset: 0; z-index: 30; background: var(--backdrop); display: flex; justify-content: center; align-items: flex-start; padding-top: 48px; }
     .qb { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 80px); display: flex; flex-direction: column; background: var(--panel); color: var(--text);
       border-radius: 14px; box-shadow: var(--shadow), 0 0 0 1px var(--panel-border); overflow: hidden; font-size: 13px; }

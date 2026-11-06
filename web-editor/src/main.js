@@ -163,6 +163,9 @@ async function load(markdown) {
   if (editor) await editor.destroy()
   const root = document.getElementById('editor')
   root.innerHTML = ''
+  // 刚打开时不播放小动画（不然已经勾上的待办会一起“弹”一下）；稍等一会儿再打开
+  root.classList.remove('pk-ready')
+  setTimeout(() => root.classList.add('pk-ready'), 400)
   lastOutline = ''
   lastState = ''
 

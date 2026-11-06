@@ -4,6 +4,7 @@
 // - 编辑：双击公式（或选中后按回车）弹出小框改 LaTeX 原文，边改边预览
 // - 输入：打 $x^2$ 自动变成公式；空行打 $$ 再回车，插入独立一行的公式
 
+import { animateIn, animateOut } from './motion.js'
 import remarkMath from 'remark-math'
 import katex from 'katex'
 import { $remark, $node, $view, $inputRule, $prose } from '@milkdown/kit/utils'
@@ -131,6 +132,7 @@ export function openMathEditor(view, pos, { placeholders = [], isNew = false } =
     <textarea spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
     <div class="math-editor-hint">${display ? t('⌘回车', '⌘Return') : t('回车', 'Return')} ${t('确定', 'to confirm')} · Esc ${t('取消', 'to cancel')}${placeholders.length > 1 ? ' · Tab ' + t('下一个空', 'for next blank') : ''}</div>`
   document.body.appendChild(box)
+  animateIn(box) // 淡入、往下滑一点点
   const input = box.querySelector('textarea')
   const preview = box.querySelector('.math-editor-preview')
   input.value = node.attrs.value
@@ -162,7 +164,7 @@ export function openMathEditor(view, pos, { placeholders = [], isNew = false } =
     if (activeEditor !== state) return
     activeEditor = null
     document.removeEventListener('keydown', onEscape, true)
-    box.remove()
+    animateOut(box)
     const current = view.state.doc.nodeAt(pos)
     if (!current || current.type !== node.type) return
     const value = input.value.trim() ? input.value : ''

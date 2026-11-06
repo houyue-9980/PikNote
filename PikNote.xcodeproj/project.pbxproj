@@ -26,6 +26,7 @@
 		AF5A4CBB7BCA039ECE00D33A /* Tutorial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50647935F537B55A6D35C9C6 /* Tutorial.swift */; };
 		C09513629363D4267C8BC531 /* ShelfWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F2288EE0C95FE49D4EA1E2 /* ShelfWindow.swift */; };
 		CFEC69AD18E6850CF73F3644 /* NoteWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAABE13D41DAB42C3294139A /* NoteWindow.swift */; };
+		DDE9834A57923C60F83138EA /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587C36FABC7AD1826BDF0700 /* Motion.swift */; };
 		DFAD03F89904741519AF2DDC /* OutlineSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1842C1C770D6AC3B74E1CDF8 /* OutlineSidebar.swift */; };
 		E617E8E1020E23184D4AA850 /* PikNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AEC8A0D845056536811B2E /* PikNoteApp.swift */; };
 		F3A584FCBE0358769CEC33BE /* Zoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DFAB5A70FABC92D9C693CB6 /* Zoom.swift */; };
@@ -39,6 +40,7 @@
 		3DD670BDB19F29DA16D5A6B5 /* editor */ = {isa = PBXFileReference; lastKnownFileType = folder; name = editor; path = PikNote/Resources/editor; sourceTree = SOURCE_ROOT; };
 		4412EE4F5D34BA70DD44AAD9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		50647935F537B55A6D35C9C6 /* Tutorial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tutorial.swift; sourceTree = "<group>"; };
+		587C36FABC7AD1826BDF0700 /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
 		7D97BC08CEB333EBAAE6FC09 /* Personalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Personalization.swift; sourceTree = "<group>"; };
 		84DC9C5368B21474029D34AF /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		88F2288EE0C95FE49D4EA1E2 /* ShelfWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfWindow.swift; sourceTree = "<group>"; };
@@ -80,6 +82,7 @@
 			children = (
 				1E4C156C2C018A79BFC55670 /* Appearance.swift */,
 				C601B53E5EB1BA3184986D16 /* Language.swift */,
+				587C36FABC7AD1826BDF0700 /* Motion.swift */,
 				7D97BC08CEB333EBAAE6FC09 /* Personalization.swift */,
 				93AEC8A0D845056536811B2E /* PikNoteApp.swift */,
 				9DFAB5A70FABC92D9C693CB6 /* Zoom.swift */,
@@ -230,6 +233,7 @@
 				798FE0BEB3F8CF58B39B921B /* Language.swift in Sources */,
 				81482270CBD9123910B608F5 /* Library.swift in Sources */,
 				75098864D2523E71D735E206 /* MarkdownNote.swift in Sources */,
+				DDE9834A57923C60F83138EA /* Motion.swift in Sources */,
 				567B1AE9A836D412AAEB46D4 /* NewNoteSheet.swift in Sources */,
 				CFEC69AD18E6850CF73F3644 /* NoteWindow.swift in Sources */,
 				2C6F3E601E5DF811B18D3FE4 /* OpenNotes.swift in Sources */,
@@ -332,7 +336,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -345,7 +349,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -392,7 +396,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -411,7 +415,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

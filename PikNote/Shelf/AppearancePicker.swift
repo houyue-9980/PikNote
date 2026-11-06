@@ -43,6 +43,7 @@ struct AppearancePicker: View {
             .overlay(Circle().strokeBorder(c == color ? Color.accentColor : .clear, lineWidth: 2))
             .contentShape(Circle())
             .onTapGesture { color = c }
+            .pikAnimation(Motion.quick, value: color)
     }
 
     private func emojiButton(_ e: String) -> some View {
@@ -53,8 +54,9 @@ struct AppearancePicker: View {
                         .strokeBorder(e == emoji ? Color.accentColor : .clear, lineWidth: 2)
                         .background(RoundedRectangle(cornerRadius: 7).fill(e == emoji ? Color.accentColor.opacity(0.1) : .clear))
                 )
+                .pikAnimation(Motion.quick, value: emoji)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle(scale: 0.88))
     }
 
     private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
@@ -78,6 +80,7 @@ private struct MoreColorsButton: View {
             .background(Circle().fill(hovering ? Color.primary.opacity(0.07) : .clear))
             .contentShape(Circle())
             .onHover { hovering = $0 }
+            .pikAnimation(Motion.quick, value: hovering)
             .onTapGesture {
                 ColorPanelBridge.shared.open(initial: color.color) { picked in
                     if let custom = ShelfColor(custom: picked) { color = custom }

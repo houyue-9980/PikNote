@@ -77,6 +77,7 @@ struct ShelfManager: View {
                 Text(L("书架上", "On Shelves")).font(.headline).foregroundStyle(.secondary)
                 ForEach(library.shelves) { shelf in
                     ShelfSection(shelf: shelf, renaming: $renaming, attempt: attempt)
+                        .transition(.opacity)
                 }
                 if library.shelves.isEmpty {
                     Text(L("还没有书架。点右上角“新建一层”。", "No shelves yet. Click “New Shelf” at the top right.")).foregroundStyle(.secondary)
@@ -87,7 +88,9 @@ struct ShelfManager: View {
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .pikAnimation(Motion.standard, value: library.shelves.map(\.id))
         }
+        .pikAnimation(Motion.quick, value: shelvesTargeted)
         .background(shelvesTargeted ? Color.accentColor.opacity(0.06) : .clear)
         // 拖到左边的空白处：归档的书架放回来、书架排到最后
         .dropDestination(for: URL.self) { urls, _ in
@@ -292,6 +295,7 @@ private struct ShelfSection: View {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(shelf.items) { item in
                     ItemRow(item: item, folder: shelf.url, attempt: attempt)
+                        .transition(.opacity)
                 }
                 if shelf.items.isEmpty {
                     Text(L("空的，把文件拖到这里", "Empty. Drag files here."))
@@ -304,6 +308,8 @@ private struct ShelfSection: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(targeted ? Color.accentColor.opacity(0.08) : Color.primary.opacity(0.03))
             )
+            .pikAnimation(Motion.standard, value: shelf.items.map(\.id))
+            .pikAnimation(Motion.quick, value: targeted)
             // 拖到这层的空白处：文件放到最后；整层书架（包括归档的）排到这层后面
             .dropDestination(for: URL.self) { urls, _ in
                 attempt {
@@ -377,6 +383,8 @@ private struct ItemRow: View {
         }
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
+        .pikAnimation(Motion.quick, value: hovering)
+        .pikAnimation(Motion.quick, value: targeted)
         .draggable(item.url) {
             HStack { TileIcon(emoji: item.emoji, color: item.color, size: 28); Text(item.title) }.padding(6)
         }
@@ -425,7 +433,7 @@ private struct ItemRow: View {
         }
         .popover(isPresented: $editing, arrowEdge: .trailing) {
             HStack(alignment: .top, spacing: 20) {
-                TileIcon(emoji: emoji, color: color, size: 72)
+                LiveTileIcon(emoji: emoji, color: color, size: 72)
                 AppearancePicker(emoji: $emoji, color: $color)
             }
             .padding(18)

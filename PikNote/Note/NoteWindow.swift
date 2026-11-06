@@ -56,6 +56,7 @@ struct StatusBar: View {
             }
             .buttonStyle(.plain)
             .onHover { hoveringName = $0 }
+            .pikAnimation(Motion.quick, value: hoveringName)
             .help(L("点击重命名", "Click to rename"))
         }
         .background(WindowReader { window = $0 })
@@ -261,10 +262,13 @@ private struct NoteTitle: View {
                 .help(L("重命名、在访达中显示", "Rename, Show in Finder"))
             }
             if let subtitle, !subtitle.isEmpty {
+                // “编辑中… / 已保存”切换时淡入淡出
                 Text(subtitle)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .contentTransition(.opacity)
+                    .pikAnimation(Motion.standard, value: subtitle)
             }
         }
         .padding(.leading, 4)
