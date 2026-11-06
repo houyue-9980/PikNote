@@ -1,4 +1,6 @@
-// 生成拾记的软件图标：白底黑字“拾”，右下角一块橙色小方块。
+// 生成拾记的软件图标：白底黑字“记”，右下角一块橙色小方块。
+// 拾系列的图标都是这一套：用软件名的第二个字（拾记 → 记、拾时 → 时、拾卡 → 卡），
+// 右下角的橙色方块是整个系列共同的标记。
 // 用法：swift tools/make-icon.swift 输出目录
 import AppKit
 
@@ -23,9 +25,9 @@ func render(size px: Int) -> Data {
     ctx.restoreGState()
     ctx.addPath(path); ctx.setStrokeColor(NSColor.black.withAlphaComponent(0.08).cgColor); ctx.setLineWidth(3); ctx.strokePath()
 
-    // “拾”字：宋体粗体，略偏左上，给右下角色块留位置
+    // “记”字：宋体粗体，略偏左上，给右下角色块留位置
     let font = NSFont(name: "STSongti-SC-Black", size: 560) ?? NSFont(name: "Songti SC", size: 560) ?? .boldSystemFont(ofSize: 560)
-    let text = NSAttributedString(string: "拾", attributes: [.font: font, .foregroundColor: NSColor(white: 0.1, alpha: 1)])
+    let text = NSAttributedString(string: "记", attributes: [.font: font, .foregroundColor: NSColor(white: 0.1, alpha: 1)])
     let bounds = text.boundingRect(with: .zero, options: [.usesLineFragmentOrigin, .usesFontLeading])
     text.draw(at: CGPoint(x: 512 - bounds.width / 2 - 20, y: 512 - bounds.height / 2 + 20))
 

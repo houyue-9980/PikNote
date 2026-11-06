@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/houyue-9980/PikNote/releases/latest"><b>下载 Download</b></a>
-  &nbsp;·&nbsp; 当前版本 Version <b>1.2.0</b>
+  &nbsp;·&nbsp; 当前版本 Version <b>2.0.0</b>
   &nbsp;·&nbsp; macOS 15+
   <br><br>
   <a href="#中文">中文</a> &nbsp;|&nbsp; <a href="#english">English</a>
@@ -41,6 +41,8 @@
 
 一个超轻量的 Mac 原生笔记软件：书架是唯一的导航，每篇笔记是一个普通的 .md 文件，写的时候所见即所得，写数学公式不用背 LaTeX。
 
+> 从 2.0 起，拾记的图标换成了“记”字。拾系列的每款软件都用名字的第二个字做图标，右下角的橙色方块是整个系列共同的标记。
+
 ### 特点
 
 - **文件永远是你的**：每篇笔记都是标准的 `.md` 文件，存在你选的文件夹里（可以放在 iCloud 云盘、OneDrive 等任何同步文件夹）。卸掉拾记，笔记一切如常
@@ -53,7 +55,7 @@
 
 ### 安装
 
-1. 到 [Releases](https://github.com/houyue-9980/PikNote/releases/latest) 下载 `PikNote-1.2.0.dmg`
+1. 到 [Releases](https://github.com/houyue-9980/PikNote/releases/latest) 下载 `PikNote-2.0.0.dmg`
 2. 打开后，把 **PikNote** 拖进“应用程序”
 3. 第一次打开：拾记没有经过苹果公证，直接双击会提示“无法验证开发者”。请在“应用程序”里**右键点击 PikNote → 打开**，再在弹窗里点“打开”。之后就能正常双击打开了
    - 如果没有“打开”按钮：打开 **系统设置 → 隐私与安全性**，在下面找到关于 PikNote 的提示，点“仍要打开”
@@ -98,6 +100,8 @@ tools/run-app.sh
 
 A lightweight native Mac note app: the bookshelf is your only navigation, every note is a plain .md file, what you see is what you get, and you can write math without memorizing LaTeX.
 
+> Starting with 2.0, PikNote’s icon shows 记 (“note”). Every app in the 拾 series uses the second character of its name as its icon, and the orange square in the corner marks the whole family.
+
 ### Features
 
 - **Your files stay yours**: every note is a standard `.md` file in a folder you choose (iCloud Drive, OneDrive or any synced folder works). Uninstall PikNote and your notes are untouched
@@ -110,7 +114,7 @@ A lightweight native Mac note app: the bookshelf is your only navigation, every 
 
 ### Install
 
-1. Download `PikNote-1.2.0.dmg` from [Releases](https://github.com/houyue-9980/PikNote/releases/latest)
+1. Download `PikNote-2.0.0.dmg` from [Releases](https://github.com/houyue-9980/PikNote/releases/latest)
 2. Open it and drag **PikNote** into Applications
 3. PikNote isn’t notarized by Apple, so double-clicking it the first time says the developer can’t be verified. Instead, **right-click PikNote in Applications → Open**, then click Open. After that it opens normally
    - No Open button? Go to **System Settings → Privacy & Security**, find the message about PikNote near the bottom and click “Open Anyway”
