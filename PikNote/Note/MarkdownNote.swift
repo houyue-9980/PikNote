@@ -310,7 +310,12 @@ struct MarkdownEditorView: NSViewRepresentable {
         doc.scrollToHeading = { [weak web] index in
             web?.callAsyncJavaScript("window.piknote.scrollToHeading(i)", arguments: ["i": index], in: nil, in: .page)
         }
-        let index = Coordinator.editorPage
+        guard let index = Coordinator.editorPage else {
+            // 软件里找不到编辑器页面（软件文件不完整，比如运行中被删了）：提示一下，不要直接崩溃
+            editorLog.error("editor page missing from app bundle")
+            doc.errorMessage = L("编辑器文件丢失，请重新安装拾记。笔记文件没有受影响。", "The editor files are missing. Please reinstall PikNote. Your notes are not affected.")
+            return web
+        }
         // 允许读取整个磁盘上的文件，笔记里的图片（相对路径）才能显示
         web.loadFileURL(index, allowingReadAccessTo: URL(fileURLWithPath: "/"))
         return web
@@ -323,7 +328,7 @@ struct MarkdownEditorView: NSViewRepresentable {
     }
 
     final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
-        static let editorPage = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "editor")!
+        static let editorPage = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "editor")
         let doc: MarkdownDocument
         weak var web: WKWebView?
 
@@ -421,7 +426,7 @@ struct MarkdownEditorView: NSViewRepresentable {
         /// 不让网页跳走（比如点了链接、拖进来一个文件），编辑器页面要一直留着
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
             // 只放行编辑器页面本身，其他一律拦下
-            let allow = action.request.url?.standardizedFileURL == Self.editorPage.standardizedFileURL
+            let allow = Self.editorPage != nil && action.request.url?.standardizedFileURL == Self.editorPage?.standardizedFileURL
             editorLog.notice("navigation \(allow ? "allowed" : "blocked", privacy: .public): \(action.request.url?.lastPathComponent ?? "-", privacy: .public) current=\(webView.url?.lastPathComponent ?? "nil", privacy: .public)")
             return allow ? .allow : .cancel
         }
