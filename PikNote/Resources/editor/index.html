@@ -43,6 +43,14 @@
     .ProseMirror h4 { font-size: 15px; margin: 1.1em 0 0.4em; }
     .ProseMirror h5 { font-size: 14px; margin: 1em 0 0.3em; }
     .ProseMirror h4, .ProseMirror h5 { scroll-margin-top: 16px; line-height: 1.4; }
+    /* 打 # 写标题、还没按回车时：已经按标题的样子显示，# 淡一点 */
+    .ProseMirror p.pending-heading { font-weight: 700; line-height: 1.35; }
+    .ProseMirror p.pending-h1 { font-size: 26px; color: var(--h1-color, inherit); }
+    .ProseMirror p.pending-h2 { font-size: 19px; color: var(--h2-color, inherit); }
+    .ProseMirror p.pending-h3 { font-size: 16px; color: var(--h3-color, inherit); }
+    .ProseMirror p.pending-h4 { font-size: 15px; color: var(--h4-color, inherit); }
+    .ProseMirror p.pending-h5, .ProseMirror p.pending-h6 { font-size: 14px; color: var(--h5-color, inherit); }
+    .ProseMirror .pending-hash { opacity: 0.35; font-weight: 400; }
     /* 个性化里设置的标题颜色（没设置就跟着主题的文字颜色） */
     .ProseMirror h1 { color: var(--h1-color, inherit); }
     .ProseMirror h2 { color: var(--h2-color, inherit); }

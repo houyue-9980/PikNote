@@ -8,7 +8,7 @@
 
 A lightweight native Mac note app: the bookshelf is your only navigation, every note is a plain .md file, what you see is what you get, and you can write math without memorizing LaTeX.
 
-> 当前版本 / Current version：**1.0.0**
+> 当前版本 / Current version：**1.0.1**
 
 ## 特点
 
@@ -42,7 +42,7 @@ A lightweight native Mac note app: the bookshelf is your only navigation, every 
 
 ## 安装
 
-1. 到 [Releases](https://github.com/houyue-9980/PikNote/releases) 下载 `PikNote-1.0.0.dmg`
+1. 到 [Releases](https://github.com/houyue-9980/PikNote/releases) 下载 `PikNote-1.0.1.dmg`
 2. 打开后，把 **PikNote** 拖进“应用程序”
 3. 第一次打开：拾记没有经过苹果公证，直接双击会提示“无法验证开发者”。请在“应用程序”里**右键点击 PikNote → 打开**，再在弹窗里点“打开”。之后就能正常双击打开了
    - 如果没有“打开”按钮：打开 **系统设置 → 隐私与安全性**，在下面找到关于 PikNote 的提示，点“仍要打开”
@@ -52,7 +52,7 @@ A lightweight native Mac note app: the bookshelf is your only navigation, every 
 
 ## Install
 
-1. Download `PikNote-1.0.0.dmg` from [Releases](https://github.com/houyue-9980/PikNote/releases)
+1. Download `PikNote-1.0.1.dmg` from [Releases](https://github.com/houyue-9980/PikNote/releases)
 2. Open it and drag **PikNote** into Applications
 3. PikNote isn’t notarized by Apple, so the first time, **right-click PikNote in Applications → Open**, then click Open. After that it opens normally
 4. Choose a notes folder. If it’s empty, PikNote creates a shelf with a short guide in English and Chinese

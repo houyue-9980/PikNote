@@ -9,11 +9,12 @@
 //   state    {...}       光标处的格式（工具栏按钮按下的样子）
 //   openLink href        ⌘+点击了链接
 
-import { Editor, rootCtx, defaultValueCtx, editorViewOptionsCtx, editorViewCtx, remarkStringifyOptionsCtx, commandsCtx } from '@milkdown/kit/core'
+import { Editor, rootCtx, defaultValueCtx, editorViewOptionsCtx, editorViewCtx, remarkStringifyOptionsCtx, commandsCtx, serializerCtx } from '@milkdown/kit/core'
 import {
   commonmark, toggleStrongCommand, toggleEmphasisCommand, toggleInlineCodeCommand, turnIntoTextCommand,
   wrapInHeadingCommand, wrapInBulletListCommand, wrapInOrderedListCommand, wrapInBlockquoteCommand,
   createCodeBlockCommand, insertHrCommand, insertImageCommand, liftListItemCommand, remarkPreserveEmptyLinePlugin,
+  wrapInHeadingInputRule,
 } from '@milkdown/kit/preset/commonmark'
 import { gfm, remarkGFMPlugin, toggleStrikethroughCommand, insertTableCommand, addRowAfterCommand, addColAfterCommand } from '@milkdown/kit/preset/gfm'
 import { history } from '@milkdown/kit/plugin/history'
@@ -26,13 +27,15 @@ import { math } from './math.js'
 import { highlight, toggleHighlightCommand } from './highlight.js'
 import { quickBarKeys, toggleQuickBar, insertFormula } from './quickbar.js'
 import { setLang } from './i18n.js'
+import { pendingHeading, docForSave } from './heading.js'
 import { imageDropPaste, imageSaved, insertImagesAt, imageView, selectedImage, resizeSelectedImage } from './images.js'
 
 let editor = null
 
 // 不保留空行：Milkdown 默认会把空段落存成 <br />（HTML），文件就不是纯 Markdown 了。
 // 去掉这个功能；文件里已有的单独一行 <br />，读进来时也去掉（下次编辑保存时就清理干净了）。
-const commonmarkWithoutEmptyLines = commonmark.filter((plugin) => !remarkPreserveEmptyLinePlugin.includes(plugin))
+// 另外去掉“打完 # 和空格马上变标题”的规则，换成 heading.js 里等回车再变的版本
+const commonmarkWithoutEmptyLines = commonmark.filter((plugin) => !remarkPreserveEmptyLinePlugin.includes(plugin) && plugin !== wrapInHeadingInputRule)
 const dropBrLines = $remark('dropBrLines', () => () => (tree) => {
   const isBr = (node) => node.type === 'html' && /^<br\s*\/?>$/i.test(node.value.trim())
   const walk = (node) => {
@@ -169,8 +172,9 @@ async function load(markdown) {
       ctx.set(remarkGFMPlugin.options.key, { tablePipeAlign: false })
       ctx.update(editorViewOptionsCtx, (prev) => ({ ...prev, attributes: { spellcheck: 'false' } }))
       // 用户改了内容才通知外壳；外壳负责“停止输入 1 秒后保存”
-      ctx.get(listenerCtx).markdownUpdated((_ctx, md, prevMd) => {
-        if (md !== prevMd) send({ type: 'changed', markdown: tidy(md) })
+      ctx.get(listenerCtx).markdownUpdated((c, md, prevMd) => {
+        // 存进文件时，还在打的 “# 标题” 也按真正的标题存
+        if (md !== prevMd) send({ type: 'changed', markdown: tidy(c.get(serializerCtx)(docForSave(c.get(editorViewCtx).state))) })
       })
     })
     .use(commonmarkWithoutEmptyLines)
@@ -180,6 +184,7 @@ async function load(markdown) {
     .use(listener)
     .use(math)
     .use(quickBarKeys)
+    .use(pendingHeading)
     .use(imageDropPaste)
     .use(imageView)
     .use(highlight)
@@ -390,7 +395,7 @@ window.piknote = {
   setBase,
   command,
   scrollToHeading,
-  getMarkdown: () => tidy(editor?.action(getMarkdown()) ?? ''),
+  getMarkdown: () => editor ? tidy(editor.action((ctx) => ctx.get(serializerCtx)(docForSave(ctx.get(editorViewCtx).state)))) : '',
   // 调试用：拿到编辑器内部的视图
   view,
 }
