@@ -18,16 +18,20 @@ import {
 } from '@milkdown/kit/preset/commonmark'
 import { gfm, remarkGFMPlugin, toggleStrikethroughCommand, insertTableCommand, addRowAfterCommand, addColAfterCommand } from '@milkdown/kit/preset/gfm'
 import { history } from '@milkdown/kit/plugin/history'
+import { gapCursorPlugin } from '@milkdown/kit/plugin/cursor'
+import { trailing } from '@milkdown/kit/plugin/trailing'
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { getMarkdown, $prose, $remark } from '@milkdown/kit/utils'
 import { Selection, TextSelection, Plugin } from '@milkdown/kit/prose/state'
 import { lift } from '@milkdown/kit/prose/commands'
-import { deleteRow, deleteColumn, deleteTable } from '@milkdown/kit/prose/tables'
+import { deleteTable } from '@milkdown/kit/prose/tables'
 import { math } from './math.js'
 import { highlight, toggleHighlightCommand } from './highlight.js'
 import { quickBarKeys, toggleQuickBar, insertFormula } from './quickbar.js'
 import { setLang } from './i18n.js'
 import { pendingHeading, docForSave } from './heading.js'
+import { tableDelete, deleteTableLines } from './table.js'
+import { dividerClick, dragSelectFrom } from './divider.js'
 import { imageDropPaste, imageSaved, insertImagesAt, imageView, selectedImage, resizeSelectedImage } from './images.js'
 
 let editor = null
@@ -179,8 +183,15 @@ async function load(markdown) {
     })
     .use(commonmarkWithoutEmptyLines)
     .use(dropBrLines)
+    // 要排在 gfm 前面：选中整行整列时按 delete，先轮到它（gfm 自带的只会清空格子）
+    .use(tableDelete)
     .use(gfm)
     .use(history)
+    // 分界线、表格、公式块这些不是文字的块：前后没有文字时也能放光标（一条横着闪的线）
+    .use(gapCursorPlugin)
+    .use(dividerClick)
+    // 笔记最后一块是表格 / 分界线时，后面自动留一个空段落，能接着往下写（存文件时空段落不会留下）
+    .use(trailing)
     .use(listener)
     .use(math)
     .use(quickBarKeys)
@@ -190,6 +201,11 @@ async function load(markdown) {
     .use(highlight)
     .use(reporter)
     .create()
+
+  // 打开时就让“最后一块是分界线 / 表格时，后面留一个空行”生效（它平时要等第一次编辑才动）。
+  // 不进撤销记录，也不算改动（空行不会存进文件）
+  const v = view()
+  v.dispatch(v.state.tr.setMeta('addToHistory', false))
 
   send({ type: 'loaded' })
 }
@@ -309,8 +325,8 @@ const commands = {
   table: insertTable,
   addRow: () => call(addRowAfterCommand),
   addColumn: () => call(addColAfterCommand),
-  deleteRow: () => run(deleteRow),
-  deleteColumn: () => run(deleteColumn),
+  deleteRow: () => run(deleteTableLines('rows')),
+  deleteColumn: () => run(deleteTableLines('cols')),
   deleteTable: () => run(deleteTable),
   formulaBar: () => toggleQuickBar(view()),
   imageSize: (direction) => resizeSelectedImage(view(), direction),
@@ -351,6 +367,20 @@ document.addEventListener('mousedown', (event) => {
   }
 })
 
+// 点笔记最下面的空白处：光标放到最后（不然点在编辑区外面，什么都不发生）
+document.addEventListener('mousedown', (event) => {
+  const v = view()
+  if (!v || event.button !== 0 || v.dom.contains(event.target)) return
+  if (event.target.closest?.('.qb-backdrop, .math-editor')) return
+  if (event.clientY < v.dom.getBoundingClientRect().bottom) return
+  event.preventDefault()
+  const end = Selection.atEnd(v.state.doc)
+  v.dispatch(v.state.tr.setSelection(end).scrollIntoView())
+  v.focus()
+  // 按住往上拖：从最后开始选
+  dragSelectFrom(v, end.head, event)
+})
+
 // ⌘+点击链接：交给 Swift 打开（其他笔记 / PDF 开新窗口，网址用浏览器）
 document.addEventListener('click', (event) => {
   const a = event.target.closest?.('a[href]')
@@ -359,8 +389,77 @@ document.addEventListener('click', (event) => {
   if (event.metaKey) send({ type: 'openLink', href: a.getAttribute('href') })
 }, true)
 
+// ---------- 右键链接 ----------
+// 右键点到链接上：记下是哪一段链接。Mac 那边把右键菜单换成“打开 / 重命名 / 拷贝地址 / 去掉链接”，
+// 选了哪项再回来调用下面的 contextLink… 函数
+let contextLink = null
+
+// 光标所在这段文字里，和 href 相同、连在一起的那一整段链接
+function linkRangeAt($pos, href, type) {
+  const start = $pos.start()
+  const runs = []
+  let cur = null
+  $pos.parent.forEach((child, offset) => {
+    const mark = child.isText && type.isInSet(child.marks)
+    const from = start + offset, to = from + child.nodeSize
+    if (mark && mark.attrs.href === href) {
+      if (cur) cur.to = to
+      else cur = { from, to, mark }
+    } else if (cur) { runs.push(cur); cur = null }
+  })
+  if (cur) runs.push(cur)
+  return runs.find((r) => $pos.pos >= r.from && $pos.pos <= r.to) ?? runs[0] ?? null
+}
+
+document.addEventListener('contextmenu', (event) => {
+  contextLink = null
+  const a = event.target.closest?.('a[href]')
+  const v = view()
+  if (!a || !v || !v.dom.contains(a)) return
+  const href = a.getAttribute('href')
+  const range = linkRangeAt(v.state.doc.resolve(v.posAtDOM(a, 0)), href, v.state.schema.marks.link)
+  if (range) contextLink = { ...range, href, text: v.state.doc.textBetween(range.from, range.to) }
+}, true)
+
+// 右键时记下的那段链接还在原处吗（右键之后内容可能变了）
+function currentContextLink() {
+  const v = view()
+  const r = contextLink
+  if (!v || !r || r.to > v.state.doc.content.size) return null
+  if (v.state.doc.textBetween(r.from, r.to) !== r.text || !v.state.doc.rangeHasMark(r.from, r.to, r.mark)) return null
+  return r
+}
+
+// 改链接显示的文字和地址；文字留空就用地址当文字。原来的粗体等格式保留
+function renameContextLink(text, href) {
+  const v = view()
+  const r = currentContextLink()
+  if (!r) return
+  href = href || r.href
+  text = text || href
+  const marks = v.state.doc.nodeAt(r.from)?.marks ?? []
+  const link = r.mark.type.create({ ...r.mark.attrs, href })
+  const tr = v.state.tr.replaceWith(r.from, r.to, v.state.schema.text(text, link.addToSet(r.mark.removeFromSet(marks))))
+  v.dispatch(tr.setSelection(TextSelection.create(tr.doc, r.from + text.length)))
+  contextLink = null
+  v.focus()
+}
+
+function removeContextLink() {
+  const v = view()
+  const r = currentContextLink()
+  if (!r) return
+  v.dispatch(v.state.tr.removeMark(r.from, r.to, v.state.schema.marks.link))
+  contextLink = null
+  v.focus()
+}
+
 window.piknote = {
   load,
+  // 右键菜单用：右键点到的链接 { href, text }，没点到链接是 null
+  contextLink: () => (currentContextLink() ? { href: contextLink.href, text: contextLink.text } : null),
+  renameContextLink,
+  removeContextLink,
   // Swift 存好拖进来 / 粘贴的图片后调用
   imageSaved: (id, src, alt) => imageSaved(view(), id, src, alt),
   // Mac 这边接住拖进来的图片后调用

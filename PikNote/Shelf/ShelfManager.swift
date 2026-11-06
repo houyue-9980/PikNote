@@ -57,7 +57,7 @@ struct ShelfManager: View {
                 Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)
             } else {
-                Text(L("拖动调整顺序 · 拖到右边移出书架 · 也可以从访达把文件拖进来（会复制一份）", "Drag to reorder · Drag right to archive · Drag files in from Finder (they’re copied)"))
+                Text(L("拖动调整顺序 · 拖到右边移出书架，拖回左边放回书架 · 也可以从访达把文件拖进来（会复制一份）", "Drag to reorder · Drag right to archive, back left to restore · Drag files in from Finder (they’re copied)"))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -88,7 +88,17 @@ struct ShelfManager: View {
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .background(shelvesTargeted ? Color.accentColor.opacity(0.06) : .clear)
+        // 拖到左边的空白处：归档的书架放回来、书架排到最后
+        .dropDestination(for: URL.self) { urls, _ in
+            let shelfURLs = urls.filter { library.isShelfFolder($0) }
+            guard !shelfURLs.isEmpty else { return false }
+            attempt { for url in shelfURLs { try library.putShelf(url, before: nil) } }
+            return true
+        } isTargeted: { shelvesTargeted = $0 }
     }
+
+    @State private var shelvesTargeted = false
 
     /// 未放上书架的散落文件、被忽略的子文件夹
     private var unshelved: some View {
@@ -269,10 +279,8 @@ private struct ShelfSection: View {
             .dropDestination(for: URL.self) { urls, _ in
                 attempt {
                     for url in urls {
-                        if library.shelves.contains(where: { $0.url.standardizedFileURL.path == url.standardizedFileURL.path }) {
-                            try library.moveShelf(url, before: shelf.url)
-                        } else if library.archivedShelves.contains(where: { $0.url.standardizedFileURL.path == url.standardizedFileURL.path }) {
-                            try library.restoreShelf(url, before: shelf.url)
+                        if library.isShelfFolder(url) {
+                            try library.putShelf(url, before: shelf.url)
                         } else if !url.isDirectory {
                             try library.place(url, in: shelf.url)
                         }
@@ -296,9 +304,17 @@ private struct ShelfSection: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(targeted ? Color.accentColor.opacity(0.08) : Color.primary.opacity(0.03))
             )
-            // 拖到这层的空白处：放到最后
+            // 拖到这层的空白处：文件放到最后；整层书架（包括归档的）排到这层后面
             .dropDestination(for: URL.self) { urls, _ in
-                attempt { for url in urls where !url.isDirectory { try library.place(url, in: shelf.url) } }
+                attempt {
+                    for url in urls {
+                        if library.isShelfFolder(url) {
+                            try library.putShelf(url, before: library.shelf(after: shelf.url))
+                        } else if !url.isDirectory {
+                            try library.place(url, in: shelf.url)
+                        }
+                    }
+                }
                 return true
             } isTargeted: { targeted = $0 }
         }
@@ -335,6 +351,7 @@ private struct ItemRow: View {
     @State private var targeted = false
     @State private var hovering = false
     @State private var confirmingDelete = false
+    @State private var renaming = false
 
     private var inArchive: Bool { library.isArchived(folder) }
 
@@ -347,7 +364,7 @@ private struct ItemRow: View {
             }
             Spacer()
             if hovering {
-                Button(L("改图标", "Change Icon")) { startEditing() }
+                Button(L("外观…", "Appearance…")) { startEditing() } // 图标、底色都在这里改
                     .buttonStyle(.link).font(.caption)
             }
         }
@@ -364,11 +381,21 @@ private struct ItemRow: View {
             HStack { TileIcon(emoji: item.emoji, color: item.color, size: 28); Text(item.title) }.padding(6)
         }
         .dropDestination(for: URL.self) { urls, _ in
-            attempt { for url in urls where !url.isDirectory && url != item.url { try library.place(url, in: folder, before: item.url) } }
+            attempt {
+                for url in urls {
+                    if library.isShelfFolder(url) {
+                        // 整层书架拖到某个文件上：排到这层后面（在归档里就不管）
+                        if !inArchive { try library.putShelf(url, before: library.shelf(after: folder)) }
+                    } else if !url.isDirectory && url != item.url {
+                        try library.place(url, in: folder, before: item.url)
+                    }
+                }
+            }
             return true
         } isTargeted: { targeted = $0 }
         .contextMenu {
             Button(L("改图标和底色…", "Change Icon and Color…")) { startEditing() }
+            Button(L("重命名…", "Rename…")) { renaming = true }
             if inArchive {
                 Menu(L("放回书架", "Put Back on Shelf")) {
                     ForEach(library.shelves) { shelf in
@@ -389,6 +416,7 @@ private struct ItemRow: View {
             Button(L("在访达中显示", "Show in Finder")) { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
             Button(L("移到废纸篓…", "Move to Trash…"), role: .destructive) { confirmingDelete = true }
         }
+        .renameFileAlert(item.url, isPresented: $renaming)
         .confirmationDialog(L("把“\(item.title)”移到废纸篓？", "Move “\(item.title)” to the Trash?"), isPresented: $confirmingDelete) {
             Button(L("移到废纸篓", "Move to Trash"), role: .destructive) { attempt { try library.trashFile(item.url) } }
             Button(L("取消", "Cancel"), role: .cancel) {}
@@ -445,7 +473,7 @@ private struct ArchivedShelfGroup: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
-            .help(L("整层归档的书架。拖到左边的书架标题上，也能放回", "An archived shelf. You can also drag it onto a shelf title on the left to put it back."))
+            .help(L("整层归档的书架。拖回左边就能放回书架", "An archived shelf. Drag it back to the left to put it on the shelves again."))
             .draggable(shelf.url) {
                 Label(shelf.name, systemImage: "archivebox").padding(6)
             }

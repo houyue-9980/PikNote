@@ -7,6 +7,7 @@ struct PikNoteApp: App {
 
     init() {
         AppearanceSettings.shared.apply() // 启动时就用上保存的主题
+        OpenNotes.installTitleMenu() // 右键笔记窗口的标题：重命名 / 在访达中显示
     }
 
     var body: some Scene {
@@ -61,6 +62,12 @@ struct AppCommands: Commands {
                 .keyboardShortcut("l", modifiers: [.command, .shift]) // ⌘0 留给“实际大小”
             Divider()
             Button(L("更换笔记文件夹…", "Change Notes Folder…")) { library.chooseRoot() }
+        }
+        // 文件 → 重命名…：重命名当前这篇笔记（在笔记窗口里才能用）
+        CommandGroup(after: .saveItem) {
+            Button(L("重命名…", "Rename…")) {
+                NotificationCenter.default.post(name: .piknoteRenameNote, object: NSApp.keyWindow)
+            }
         }
     }
 }

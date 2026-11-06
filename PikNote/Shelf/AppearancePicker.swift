@@ -24,19 +24,25 @@ struct AppearancePicker: View {
 
             field(L("底色", "Color")) {
                 HStack(spacing: 10) {
-                    ForEach(ShelfColor.allCases, id: \.self) { c in
-                        Circle()
-                            .fill(c.color)
-                            .overlay(Circle().strokeBorder(.black.opacity(0.08)))
-                            .frame(width: 24, height: 24)
-                            .padding(3)
-                            .overlay(Circle().strokeBorder(c == color ? Color.accentColor : .clear, lineWidth: 2))
-                            .contentShape(Circle())
-                            .onTapGesture { color = c }
-                    }
+                    ForEach(ShelfColor.allCases, id: \.self) { c in swatch(c) }
+                    // 自己挑过的颜色（不在预设里）也显示出来
+                    if !color.isPreset { swatch(color) }
+                    // “…”：打开系统的颜色面板，挑任意颜色
+                    MoreColorsButton(color: $color)
                 }
             }
         }
+    }
+
+    private func swatch(_ c: ShelfColor) -> some View {
+        Circle()
+            .fill(c.color)
+            .overlay(Circle().strokeBorder(.black.opacity(0.08)))
+            .frame(width: 24, height: 24)
+            .padding(3)
+            .overlay(Circle().strokeBorder(c == color ? Color.accentColor : .clear, lineWidth: 2))
+            .contentShape(Circle())
+            .onTapGesture { color = c }
     }
 
     private func emojiButton(_ e: String) -> some View {
@@ -56,6 +62,59 @@ struct AppearancePicker: View {
             Text(label).font(.callout).foregroundStyle(.secondary)
             content()
         }
+    }
+}
+
+/// 底色后面的“…”：打开系统的颜色面板，挑的颜色马上用上
+private struct MoreColorsButton: View {
+    @Binding var color: ShelfColor
+    @State private var hovering = false
+
+    var body: some View {
+        Text("…")
+            .font(.system(size: 18, weight: .semibold))
+            .offset(y: -3)
+            .frame(width: 30, height: 30)
+            .background(Circle().fill(hovering ? Color.primary.opacity(0.07) : .clear))
+            .contentShape(Circle())
+            .onHover { hovering = $0 }
+            .onTapGesture {
+                ColorPanelBridge.shared.open(initial: color.color) { picked in
+                    if let custom = ShelfColor(custom: picked) { color = custom }
+                }
+            }
+            .onDisappear { ColorPanelBridge.shared.stop() }
+            .help(L("更多颜色", "More Colors"))
+    }
+}
+
+/// 系统颜色面板（NSColorPanel）只能通过 target/action 告诉我们选了什么颜色，这里转一下
+@MainActor
+final class ColorPanelBridge: NSObject {
+    static let shared = ColorPanelBridge()
+    private var onPick: ((Color) -> Void)?
+
+    func open(initial: Color, onPick: @escaping (Color) -> Void) {
+        self.onPick = nil // 先不接收，免得设置初始颜色时触发
+        let panel = NSColorPanel.shared
+        panel.showsAlpha = false
+        panel.color = NSColor(initial)
+        panel.setTarget(self)
+        panel.setAction(#selector(changed(_:)))
+        self.onPick = onPick
+        panel.orderFront(nil)
+    }
+
+    /// 选颜色的小窗关了：不再接收（颜色面板可以留着，但改它不会影响别的东西）
+    func stop() {
+        guard onPick != nil else { return }
+        onPick = nil
+        NSColorPanel.shared.setTarget(nil)
+        NSColorPanel.shared.setAction(nil)
+    }
+
+    @objc private func changed(_ sender: NSColorPanel) {
+        onPick?(Color(nsColor: sender.color))
     }
 }
 

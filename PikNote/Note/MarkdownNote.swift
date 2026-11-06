@@ -34,14 +34,14 @@ struct MarkdownNoteView: View {
                 FormatBar(doc: doc)
                 Divider()
                 MarkdownEditorView(doc: doc, theme: AppearanceSettings.shared.effective(scheme).rawValue)
-                Divider()
+                // 状态栏不加分隔线、不加灰底，和页面同一个底色，只是一行淡淡的字
                 StatusBar(url: url, trailing: L("\(doc.wordCount) 字", "\(doc.wordCount) words")
                           + (EditorZoom.shared.label.map { " · " + $0 } ?? ""))
             }
             .pikPageBackground()
         }
-        .navigationTitle(title)
-        .navigationSubtitle(doc.status)
+        // 标题右边有个小三角：重命名 / 在访达中显示
+        .noteTitleBar(title, subtitle: doc.status, url: url)
         .onAppear {
             // ⌘+点击链接打开其他笔记或 PDF 时，也遵守“每篇一个窗口”
             doc.openFile = { [openWindow] url in OpenNotes.open(url, using: openWindow) }
@@ -106,7 +106,9 @@ final class MarkdownDocument {
         let path = href.removingPercentEncoding ?? href
         let target = URL(fileURLWithPath: path, relativeTo: url.deletingLastPathComponent()).standardizedFileURL
         guard FileManager.default.fileExists(atPath: target.path) else {
-            errorMessage = L("找不到链接指向的文件：\(path)", "Can’t find the linked file: \(path)")
+            // 不是本地文件（比如写的是 bilibili.com，没有 https://）：当网址交给浏览器
+            let web = href.hasPrefix("//") ? "https:" + href : "https://" + href
+            if let link = URL(string: web) { NSWorkspace.shared.open(link) }
             return
         }
         if ["md", "pdf"].contains(target.pathExtension.lowercased()) {
@@ -151,12 +153,34 @@ final class MarkdownDocument {
         let shelf = note.deletingLastPathComponent().standardizedFileURL
         let assets = shelf.appendingPathComponent(assetsFolder)
         let imageFolder = image.deletingLastPathComponent().standardizedFileURL
-        if imageFolder.path == shelf.path { return image.lastPathComponent }
-        if imageFolder.path == assets.standardizedFileURL.path { return assetsFolder + "/" + image.lastPathComponent }
+        // 图片本来就在这层（或它的 assets）里：不复制。但如果它在网盘里还没下载，先下载下来，编辑器才显示得出
+        if imageFolder.path == shelf.path { _ = try readDownloading(image); return image.lastPathComponent }
+        if imageFolder.path == assets.standardizedFileURL.path { _ = try readDownloading(image); return assetsFolder + "/" + image.lastPathComponent }
         try FileManager.default.createDirectory(at: assets, withIntermediateDirectories: true)
         let target = Library.uniqueDestination(for: image.lastPathComponent, in: assets)
-        try FileManager.default.copyItem(at: image, to: target)
+        try write(readDownloading(image), to: target)
         return assetsFolder + "/" + target.lastPathComponent
+    }
+
+    /// 读出文件的全部内容；OneDrive、iCloud 等网盘里“仅在线”的文件先让系统下载下来再读。
+    /// 不直接复制文件：复制“仅在线”的文件可能只复制到一个空壳，笔记里就只剩图片的名字
+    static func readDownloading(_ file: URL) throws -> Data {
+        var result: Result<Data, Error> = .failure(CocoaError(.fileReadUnknown))
+        var coordinationError: NSError?
+        // 协调读取：网盘会先把文件下载到本地，读完才返回
+        NSFileCoordinator().coordinate(readingItemAt: file, options: [], error: &coordinationError) { local in
+            result = Result { try Data(contentsOf: local) }
+        }
+        if let coordinationError { throw coordinationError }
+        let data = try result.get()
+        guard !data.isEmpty else {
+            throw CocoaError(.fileReadCorruptFile, userInfo: [NSLocalizedDescriptionKey: L("“\(file.lastPathComponent)”是空的，可能还没从网盘下载下来", "“\(file.lastPathComponent)” is empty. It may not be downloaded from the cloud yet.")])
+        }
+        return data
+    }
+
+    private static func write(_ data: Data, to target: URL) throws {
+        try data.write(to: target, options: .atomic)
     }
 
     /// 编辑器第一次准备好时要显示的文字
@@ -270,6 +294,8 @@ struct MarkdownEditorView: NSViewRepresentable {
             web?.callAsyncJavaScript("window.piknote.insertImagesAt(x, y, items)",
                                      arguments: ["x": point.x, "y": point.y, "items": items], in: nil, in: .page)
         }
+        // 右键链接 → 打开链接
+        web.onOpenLink = { [doc] href in doc.openLink(href) }
         web.navigationDelegate = context.coordinator
         #if DEBUG
         web.isInspectable = true // 开发版：右键“检查元素”可以调试网页（正式版不开）

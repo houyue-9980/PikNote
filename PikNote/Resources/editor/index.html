@@ -62,14 +62,33 @@
     .ProseMirror mark { background: var(--mark); color: inherit; padding: 0 1px; border-radius: 2px; }
     .ProseMirror img { max-width: 100%; height: auto; border-radius: 6px; vertical-align: bottom; }
     .ProseMirror img.image-selected, .ProseMirror img.ProseMirror-selectednode { outline: 3px solid #4b8df8; outline-offset: 2px; }
-    .ProseMirror hr { border: none; border-top: 1px solid var(--border); margin: 1.5em 0; }
+    /* 读不出来的图片：显示一个虚线框，里面写着找不到哪个文件 */
+    .ProseMirror img.image-broken { display: inline-block; min-width: 200px; min-height: 1.6em; padding: 8px 12px; border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); font-size: 13px; }
+    /* 分界线：线还是 1 像素，但上下留出一块能点的地方（只有 1 像素高的话几乎点不中） */
+    .ProseMirror hr { border: none; height: 21px; margin: calc(1.5em - 10px) 0; cursor: default; border-radius: 4px;
+      background: linear-gradient(var(--border), var(--border)) center / 100% 1px no-repeat; }
+    /* 选中了不是文字的块（分界线、表格、代码块等）：给个看得见的框，不然选中了也看不出来 */
+    .ProseMirror .ProseMirror-selectednode { outline: 2px solid #4b8df8; outline-offset: 2px; border-radius: 4px; }
+    .ProseMirror hr.ProseMirror-selectednode { outline-offset: 0; background-color: var(--sel); }
+    /* 拖选的一段里夹着的分界线：涂上和选中文字一样的颜色 */
+    .ProseMirror hr.hr-in-selection { background-color: Highlight; }
+    /* 拖动选中的内容时：松手会插到哪（一条竖线）；拖动中鼠标是箭头 */
+    .drop-caret { position: absolute; width: 2px; background: #4b8df8; border-radius: 1px; pointer-events: none; z-index: 10; }
+    body.dragging-selection, body.dragging-selection * { cursor: default !important; }
+    /* 前后没有文字的块旁边的光标：一条横着闪的线 */
+    .ProseMirror-gapcursor { display: none; pointer-events: none; position: absolute; }
+    .ProseMirror-gapcursor:after { content: ""; display: block; position: absolute; top: -2px; width: 20px;
+      border-top: 1px solid var(--text); animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite; }
+    @keyframes ProseMirror-cursor-blink { to { visibility: hidden; } }
+    .ProseMirror-focused .ProseMirror-gapcursor { display: block; }
     .ProseMirror th { background: var(--subtle); text-align: left; }
     .ProseMirror .selectedCell { background: var(--sel); }
     .ProseMirror pre { background: var(--subtle); padding: 12px 14px; border-radius: 8px; overflow-x: auto; }
     .ProseMirror code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
     .ProseMirror blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--border); color: var(--muted); }
     .ProseMirror table { border-collapse: collapse; }
-    .ProseMirror td, .ProseMirror th { border: 1px solid var(--border); padding: 4px 10px; }
+    /* min-width：空格子的内容区宽度会是 0，光标画不出来（新插入的表格全是空格子） */
+    .ProseMirror td, .ProseMirror th { border: 1px solid var(--border); padding: 4px 10px; min-width: 4em; }
     /* 段间距可以在 设置 → 个性化 里改（默认 0.3 倍字号）；浏览器默认的段落上下空一整行，太稀 */
     .ProseMirror > p { margin: 0 0 calc(var(--para-gap, 0.3) * 1em); }
     .ProseMirror li > p { margin: 0.15em 0; }

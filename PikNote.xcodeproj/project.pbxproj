@@ -12,6 +12,7 @@
 		14C97B79B18D1672105E482F /* Personalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D97BC08CEB333EBAAE6FC09 /* Personalization.swift */; };
 		19A8FD45CB61A0185F0FCBA2 /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4C156C2C018A79BFC55670 /* Appearance.swift */; };
 		2C6F3E601E5DF811B18D3FE4 /* OpenNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7F209AC7B7D63FF65EBA82 /* OpenNotes.swift */; };
+		4A0E7B66C001D3BB21B0521F /* RenameFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF61D02C39FE1254D6A5931 /* RenameFile.swift */; };
 		4CCB7BF2446F824E0BECAD8F /* AppearancePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82A23C67164C5C093F64724 /* AppearancePicker.swift */; };
 		567B1AE9A836D412AAEB46D4 /* NewNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C02F9D9CF37659359984F92E /* NewNoteSheet.swift */; };
 		65EA8D277084857D96F016B7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 24C397EA931B694E0D28F5FD /* InfoPlist.strings */; };
@@ -57,6 +58,7 @@
 		C82A23C67164C5C093F64724 /* AppearancePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearancePicker.swift; sourceTree = "<group>"; };
 		D627B828B8E2CF5B002FFAB3 /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
 		D688AF8052C00324A1DDE2CD /* FolderWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderWatcher.swift; sourceTree = "<group>"; };
+		FBF61D02C39FE1254D6A5931 /* RenameFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameFile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -127,6 +129,7 @@
 			children = (
 				C82A23C67164C5C093F64724 /* AppearancePicker.swift */,
 				C02F9D9CF37659359984F92E /* NewNoteSheet.swift */,
+				FBF61D02C39FE1254D6A5931 /* RenameFile.swift */,
 				A5FE6F4DBD8F56C01687712D /* ShelfManager.swift */,
 				88F2288EE0C95FE49D4EA1E2 /* ShelfWindow.swift */,
 			);
@@ -233,6 +236,7 @@
 				DFAD03F89904741519AF2DDC /* OutlineSidebar.swift in Sources */,
 				14C97B79B18D1672105E482F /* Personalization.swift in Sources */,
 				E617E8E1020E23184D4AA850 /* PikNoteApp.swift in Sources */,
+				4A0E7B66C001D3BB21B0521F /* RenameFile.swift in Sources */,
 				9A20F987DF621F97EEFBFD85 /* ShelfManager.swift in Sources */,
 				097533FC02F0F0C75BBAE189 /* ShelfSettings.swift in Sources */,
 				C09513629363D4267C8BC531 /* ShelfWindow.swift in Sources */,
@@ -328,7 +332,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -341,7 +345,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -388,7 +392,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -407,7 +411,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

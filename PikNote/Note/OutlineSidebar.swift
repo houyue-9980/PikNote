@@ -1,4 +1,4 @@
-// 左侧栏：只有大纲。按 # ## ### 自动生成，点击跳转；左下角“书架”按钮回到书架窗口。
+// 左侧栏：只有大纲。按 # ## ### 自动生成，点击跳转；底部左边“关闭笔记本”，右边“库”。
 // 有子标题的标题前面有小三角，点一下收起 / 展开；顶部可以全部折叠 / 全部展开。
 import SwiftUI
 
@@ -12,6 +12,7 @@ struct OutlineHeading: Identifiable, Hashable {
 struct OutlineSidebar: View {
     let doc: MarkdownDocument
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismiss) private var dismiss
     /// 收起的标题（用“级别 + 文字 + 第几次出现”来认，前面加减标题时也不容易认错）
     @State private var collapsed: Set<String> = []
 
@@ -113,17 +114,21 @@ struct OutlineSidebar: View {
             }
 
             Divider()
-            Button {
-                openWindow(id: "shelf")
-            } label: {
-                Label(L("库", "Library"), systemImage: "books.vertical")
-                    .font(.callout)
+            // 底部两个按钮：左边关掉这本笔记（回到库），右边只是把库窗口叫到前面（笔记还开着）
+            HStack(spacing: 0) {
+                FooterButton(title: L("关闭", "Close"), systemImage: "xmark.circle",
+                             help: L("关闭这篇笔记，回到库（⌘W）", "Close this note and go back to the Library (⌘W)")) {
+                    openWindow(id: "shelf")
+                    dismiss()
+                }
+                Divider().frame(height: 22)
+                FooterButton(title: L("库", "Library"), systemImage: "books.vertical",
+                             help: L("打开库，笔记保持打开（⌘⇧L）", "Show the Library and keep this note open (⌘⇧L)")) {
+                    openWindow(id: "shelf")
+                }
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .help(L("回到库（⌘⇧L）", "Back to Library (⌘⇧L)"))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
         }
     }
 }
@@ -173,5 +178,35 @@ private struct OutlineRow: View {
                 .fill(current ? Color.primary.opacity(0.09) : hovering ? Color.primary.opacity(0.05) : .clear)
         )
         .onHover { hovering = $0 }
+    }
+}
+
+/// 侧栏底部的按钮：整块都能点（不只是文字），鼠标放上去有底色
+private struct FooterButton: View {
+    let title: String
+    let systemImage: String
+    let help: String
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            // 侧栏拉窄了放不下图标时，只显示文字
+            ViewThatFits(in: .horizontal) {
+                Label(title, systemImage: systemImage)
+                Text(title)
+            }
+                .font(.callout)
+                .lineLimit(1)
+                // minWidth: 0 → 两个按钮不管文字长短都平分宽度，分隔线正好在中间
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(hovering ? .primary : .secondary)
+        .background(RoundedRectangle(cornerRadius: 6).fill(hovering ? Color.primary.opacity(0.07) : .clear))
+        .onHover { hovering = $0 }
+        .help(help)
     }
 }

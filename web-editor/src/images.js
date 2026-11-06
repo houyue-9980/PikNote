@@ -117,8 +117,15 @@ export function splitAlt(alt) {
 export const imageView = $view(imageSchema.node, () => (node) => {
   const img = document.createElement('img')
   let current = node
+  // 图片读不出来：不只显示一个名字，写清楚找的是哪个文件
+  img.addEventListener('error', () => {
+    img.classList.add('image-broken')
+    img.alt = t(`⚠︎ 找不到图片：${current.attrs.src}`, `⚠︎ Image not found: ${current.attrs.src}`)
+  })
+  img.addEventListener('load', () => img.classList.remove('image-broken'))
   const draw = () => {
     const { text, width } = splitAlt(current.attrs.alt)
+    img.classList.remove('image-broken')
     img.src = current.attrs.src
     img.alt = text
     if (current.attrs.title) img.title = current.attrs.title

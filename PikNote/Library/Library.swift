@@ -23,21 +23,50 @@ struct Shelf: Identifiable, Hashable {
     var items: [ShelfItem]
 }
 
-/// 8 种浅色底色（和设计稿一致）
-enum ShelfColor: String, CaseIterable, Codable {
-    case blue, peach, green, lavender, cream, teal, pink, gray
+/// 图标的底色：8 种预设的浅色（和设计稿一致），也可以是自己挑的任意颜色（存成 "#RRGGBB"）。
+/// shelf.json 里就是一个字符串："blue" 或 "#F2D7E0"，以前存的文件不用改
+struct ShelfColor: Hashable, RawRepresentable, Codable {
+    let rawValue: String
+    init(rawValue: String) { self.rawValue = rawValue }
+
+    static let blue = ShelfColor(rawValue: "blue")
+    static let peach = ShelfColor(rawValue: "peach")
+    static let green = ShelfColor(rawValue: "green")
+    static let lavender = ShelfColor(rawValue: "lavender")
+    static let cream = ShelfColor(rawValue: "cream")
+    static let teal = ShelfColor(rawValue: "teal")
+    static let pink = ShelfColor(rawValue: "pink")
+    static let gray = ShelfColor(rawValue: "gray")
+    /// 预设的 8 种（选颜色那一排）
+    static let allCases: [ShelfColor] = [.blue, .peach, .green, .lavender, .cream, .teal, .pink, .gray]
+
+    private static let presets: [String: (Double, Double, Double)] = [
+        "blue": (0.902, 0.933, 0.980), "peach": (0.976, 0.914, 0.882), "green": (0.898, 0.953, 0.910),
+        "lavender": (0.929, 0.906, 0.973), "cream": (0.973, 0.937, 0.867), "teal": (0.882, 0.937, 0.945),
+        "pink": (0.965, 0.890, 0.902), "gray": (0.933, 0.933, 0.949),
+    ]
+
+    /// 是预设的那 8 种之一吗（不是就是自己挑的颜色）
+    var isPreset: Bool { Self.presets[rawValue] != nil }
 
     var color: Color {
-        switch self {
-        case .blue: Color(red: 0.902, green: 0.933, blue: 0.980)
-        case .peach: Color(red: 0.976, green: 0.914, blue: 0.882)
-        case .green: Color(red: 0.898, green: 0.953, blue: 0.910)
-        case .lavender: Color(red: 0.929, green: 0.906, blue: 0.973)
-        case .cream: Color(red: 0.973, green: 0.937, blue: 0.867)
-        case .teal: Color(red: 0.882, green: 0.937, blue: 0.945)
-        case .pink: Color(red: 0.965, green: 0.890, blue: 0.902)
-        case .gray: Color(red: 0.933, green: 0.933, blue: 0.949)
-        }
+        if let (r, g, b) = Self.presets[rawValue] { return Color(red: r, green: g, blue: b) }
+        return Color(hex: rawValue) ?? Color(red: 0.933, green: 0.933, blue: 0.949)
+    }
+
+    /// 自己挑的颜色
+    init?(custom color: Color) {
+        guard let hex = color.hexString else { return nil }
+        self.init(rawValue: hex)
+    }
+
+    // 存成一个字符串（不是 {"rawValue": …}），和以前的文件一样
+    init(from decoder: Decoder) throws {
+        rawValue = try decoder.singleValueContainer().decode(String.self)
+    }
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
     }
 
     /// 没设置过底色时，按名字固定挑一种，保证每次打开颜色都一样
@@ -284,6 +313,29 @@ final class Library {
         return target
     }
 
+    /// 是一层书架（书架上的或整层归档的）吗
+    func isShelfFolder(_ url: URL) -> Bool {
+        let path = url.standardizedFileURL.path
+        return (shelves + archivedShelves).contains { $0.url.standardizedFileURL.path == path }
+    }
+
+    /// 某层后面那一层（没有就是 nil，表示最后）
+    func shelf(after url: URL) -> URL? {
+        guard let i = shelves.firstIndex(where: { $0.url.standardizedFileURL.path == url.standardizedFileURL.path }),
+              i + 1 < shelves.count else { return nil }
+        return shelves[i + 1].url
+    }
+
+    /// 把一层书架放到 before 前面（nil = 最后）：书架上的就是调整顺序，归档里的就是放回书架
+    func putShelf(_ url: URL, before: URL?) throws {
+        let path = url.standardizedFileURL.path
+        if archivedShelves.contains(where: { $0.url.standardizedFileURL.path == path }) {
+            try restoreShelf(url, before: before)
+        } else if before?.standardizedFileURL.path != path {
+            try moveShelf(url, before: before)
+        }
+    }
+
     /// 移动整个书架文件夹，并把 shelf.json 里属于它的设置一起改名
     private func moveFolder(_ folder: URL, to target: URL, root: URL,
                             extra: (inout ShelfSettings, _ oldKey: String, _ newKey: String) -> Void) throws {
@@ -389,6 +441,39 @@ final class Library {
         reload()
     }
 
+    /// 重命名一个文件（扩展名不变）。表情、底色、在这层里的位置都跟着新名字走。返回新位置
+    @discardableResult
+    func renameFile(_ file: URL, to name: String) throws -> URL {
+        guard let rootURL else { throw CocoaError(.fileNoSuchFile) }
+        let source = file.standardizedFileURL
+        let ext = source.pathExtension
+        // 用户可能连扩展名一起打了（“笔记.md”），去掉，免得变成“笔记.md.md”
+        var title = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !ext.isEmpty, title.lowercased().hasSuffix("." + ext.lowercased()) { title = String(title.dropLast(ext.count + 1)) }
+        title = Self.cleanName(title)
+        let folder = source.deletingLastPathComponent()
+        let target = folder.appendingPathComponent(ext.isEmpty ? title : title + "." + ext).standardizedFileURL
+        guard target.lastPathComponent != source.lastPathComponent else { return source }
+        // 只改大小写（note → Note）时，磁盘认为是同一个文件，不算重名
+        let onlyCase = target.path.lowercased() == source.path.lowercased()
+        guard onlyCase || !FileManager.default.fileExists(atPath: target.path) else {
+            throw ShelfError(L("这层里已经有一个叫“\(target.lastPathComponent)”的文件了", "There’s already a file called “\(target.lastPathComponent)” here"))
+        }
+        let oldKey = Self.relativePath(of: source, in: rootURL)
+        let folderKey = Self.orderKey(folder, root: rootURL)
+        OpenNotes.prepareToMove(source) // 正打开的先存好、关窗口
+        try FileManager.default.moveItem(at: source, to: target)
+        let newKey = Self.relativePath(of: target, in: rootURL)
+        try ShelfSettings.update(root: rootURL) { settings in
+            if let saved = settings.items.removeValue(forKey: oldKey) { settings.items[newKey] = saved }
+            if let list = settings.order?[folderKey] {
+                settings.order?[folderKey] = list.map { $0 == source.lastPathComponent ? target.lastPathComponent : $0 }
+            }
+        }
+        reload()
+        return target
+    }
+
     /// 改一个文件的表情和底色
     func setAppearance(of file: URL, emoji: String, color: ShelfColor) throws {
         guard let rootURL else { return }
@@ -481,6 +566,8 @@ extension URL {
 extension Notification.Name {
     /// 根文件夹里有文件变了（userInfo["paths"] 是变化的路径）
     static let piknoteFilesChanged = Notification.Name("piknoteFilesChanged")
+    /// 菜单“重命名…”或点状态栏里的文件名：object 是要重命名的笔记窗口（NSWindow）
+    static let piknoteRenameNote = Notification.Name("piknoteRenameNote")
 }
 
 /// 书架管理里给用户看的错误

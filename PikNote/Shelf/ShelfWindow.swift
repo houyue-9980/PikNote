@@ -145,6 +145,11 @@ struct ShelfTile: View {
     @Environment(Library.self) private var library
     @State private var hovering = false
     @State private var confirmingDelete = false
+    @State private var renaming = false
+    @State private var dropTargeted = false
+    @State private var editing = false
+    @State private var emoji = ""
+    @State private var color = ShelfColor.gray
     @State private var errorMessage: String?
 
     var body: some View {
@@ -172,15 +177,56 @@ struct ShelfTile: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(hovering ? Color.primary.opacity(0.07) : .clear)
         )
+        .overlay(alignment: .leading) {
+            // 别的图标拖到这个图标上：放在它前面，左边一条蓝线提示
+            if dropTargeted { RoundedRectangle(cornerRadius: 1.5).fill(Color.accentColor).frame(width: 3).padding(.vertical, 8).offset(x: -8) }
+        }
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture { OpenNotes.open(item.url, using: openWindow) } // 单击在新窗口打开
+        // 按住拖：拖到别的书架上就移过去，拖到同一层的别的图标上就调整顺序
+        .draggable(item.url) {
+            VStack(spacing: 6) {
+                TileIcon(emoji: item.emoji, color: item.color, size: 64)
+                Text(item.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
+            }
+            .padding(6)
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            let folder = item.url.deletingLastPathComponent()
+            do {
+                for url in urls where !url.isDirectory && url.standardizedFileURL != item.url.standardizedFileURL {
+                    try library.place(url, in: folder, before: item.url)
+                }
+            } catch { errorMessage = error.localizedDescription }
+            return true
+        } isTargeted: { dropTargeted = $0 }
         .help(item.url.lastPathComponent)
         .contextMenu {
             Button(L("打开", "Open")) { OpenNotes.open(item.url, using: openWindow) }
+            Button(L("改图标和底色…", "Change Icon and Color…")) {
+                emoji = item.emoji
+                color = item.color
+                editing = true
+            }
+            Button(L("重命名…", "Rename…")) { renaming = true }
             Button(L("在访达中显示", "Show in Finder")) { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
             Divider()
             Button(L("移到废纸篓…", "Move to Trash…"), role: .destructive) { confirmingDelete = true }
+        }
+        .renameFileAlert(item.url, isPresented: $renaming)
+        // 改图标和底色：和书架管理里一样的小窗，关掉时保存
+        .popover(isPresented: $editing, arrowEdge: .bottom) {
+            HStack(alignment: .top, spacing: 20) {
+                TileIcon(emoji: emoji, color: color, size: 72)
+                AppearancePicker(emoji: $emoji, color: $color)
+            }
+            .padding(18)
+            .onDisappear {
+                if emoji != item.emoji || color != item.color {
+                    do { try library.setAppearance(of: item.url, emoji: emoji, color: color) } catch { errorMessage = error.localizedDescription }
+                }
+            }
         }
         .confirmationDialog(L("把“\(item.title)”移到废纸篓？", "Move “\(item.title)” to the Trash?"), isPresented: $confirmingDelete) {
             Button(L("移到废纸篓", "Move to Trash"), role: .destructive) {
@@ -190,7 +236,7 @@ struct ShelfTile: View {
         } message: {
             Text(L("删错了可以从废纸篓里拿回来。", "You can get it back from the Trash."))
         }
-        .alert(L("没能删除", "Couldn’t Delete"), isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+        .alert(L("出了点问题", "Something Went Wrong"), isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button(L("好", "OK")) { errorMessage = nil }
         } message: { Text(errorMessage ?? "") }
     }

@@ -5,6 +5,9 @@ import PDFKit
 struct NoteWindow: View {
     let url: URL
     @Environment(Library.self) private var library
+    @Environment(\.openWindow) private var openWindow
+    @State private var window: NSWindow?
+    @State private var renaming = false
 
     private var emoji: String { library.item(for: url)?.emoji ?? Library.defaultEmoji(for: url) }
     private var name: String { url.deletingPathExtension().lastPathComponent }
@@ -13,12 +16,20 @@ struct NoteWindow: View {
         Group {
             switch url.pathExtension.lowercased() {
             case "md": MarkdownNoteView(url: url, title: "\(emoji) \(name)")
-            case "pdf": PDFNoteView(url: url).navigationTitle("\(emoji) \(name)")
-            default: OtherFileView(url: url).navigationTitle("\(emoji) \(name)")
+            case "pdf": PDFNoteView(url: url).noteTitleBar("\(emoji) \(name)", url: url)
+            default: OtherFileView(url: url).noteTitleBar("\(emoji) \(name)", url: url)
             }
         }
         .frame(minWidth: 520, minHeight: 360)
-        .background(WindowReader { OpenNotes.register(url, window: $0) })
+        .background(WindowReader { OpenNotes.register(url, window: $0); window = $0 })
+        // 重命名：菜单 文件 → 重命名…，或点底部状态栏里的文件名。
+        // 改名时这个窗口会先存好、关掉，再用新名字打开
+        .onReceive(NotificationCenter.default.publisher(for: .piknoteRenameNote)) { note in
+            if let target = note.object as? NSWindow, target === window { renaming = true }
+        }
+        .renameFileAlert(url, isPresented: $renaming) { renamed in
+            OpenNotes.open(renamed, using: openWindow)
+        }
     }
 }
 
@@ -26,18 +37,31 @@ struct NoteWindow: View {
 struct StatusBar: View {
     let url: URL
     let trailing: String
+    @State private var hoveringName = false
+    @State private var window: NSWindow?
 
     var body: some View {
         HStack {
             Spacer()
             Text(trailing)
-            Text(Self.friendlyPath(url))
+            Text(Self.friendlyPath(url.deletingLastPathComponent()) + " /")
                 .lineLimit(1).truncationMode(.head)
+            // 文件名：点一下重命名
+            Button {
+                NotificationCenter.default.post(name: .piknoteRenameNote, object: window)
+            } label: {
+                Text(url.lastPathComponent)
+                    .underline(hoveringName)
+                    .foregroundStyle(hoveringName ? .primary : .secondary)
+            }
+            .buttonStyle(.plain)
+            .onHover { hoveringName = $0 }
+            .help(L("点击重命名", "Click to rename"))
         }
+        .background(WindowReader { window = $0 })
         .font(.caption)
         .foregroundStyle(.secondary)
         .padding(.horizontal, 14).padding(.vertical, 5)
-        .background(.bar)
     }
 
     /// 把长长的系统路径变成“iCloud 云盘 / 笔记 / xxx.md”这种好读的样子
@@ -186,5 +210,64 @@ struct OtherFileView: View {
                 .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - 窗口标题：名字右边一个小三角，点开可以重命名 / 在访达中显示
+
+extension View {
+    /// 用自己画的标题代替系统标题（系统标题旁边放不了按钮）；窗口菜单里的名字还是 title
+    func noteTitleBar(_ title: String, subtitle: String? = nil, url: URL) -> some View {
+        self
+            .navigationTitle(title)
+            .toolbar(removing: .title)
+            .toolbar {
+                if #available(macOS 26.0, *) {
+                    ToolbarItem(placement: .navigation) { NoteTitle(title: title, subtitle: subtitle, url: url) }
+                        .sharedBackgroundVisibility(.hidden) // 不要工具栏按钮那种玻璃底
+                } else {
+                    ToolbarItem(placement: .navigation) { NoteTitle(title: title, subtitle: subtitle, url: url) }
+                }
+            }
+    }
+}
+
+private struct NoteTitle: View {
+    let title: String
+    let subtitle: String?
+    let url: URL
+    @State private var window: NSWindow?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            // 小三角和名字放在同一行，上下居中对齐
+            HStack(alignment: .center, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 15, weight: .bold))
+                    .lineLimit(1)
+                Menu {
+                    Button(L("重命名…", "Rename…")) {
+                        NotificationCenter.default.post(name: .piknoteRenameNote, object: window)
+                    }
+                    Button(L("在访达中显示", "Show in Finder")) { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help(L("重命名、在访达中显示", "Rename, Show in Finder"))
+            }
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.leading, 4)
+        .background(WindowReader { window = $0 })
     }
 }
