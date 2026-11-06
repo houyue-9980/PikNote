@@ -1,4 +1,5 @@
-// 个性化：页面底色和标题 1–5 的颜色，浅色 / 深色 / 护眼三种主题各存一套。
+// 个性化：标题 1–5 的颜色，浅色 / 深色 / 护眼三种主题各存一套。
+// （页面底色以前也能改，2.0.3 起去掉了：底色固定用每个主题自己的颜色）
 // 每套都有好认的默认颜色；用户改过的记住，切换主题再切回来还在。
 // 只影响拾记里显示的样子，不写进笔记文件（文件还是普通的 .md）。
 import SwiftUI
@@ -8,7 +9,7 @@ final class Personalization {
     static let shared = Personalization()
     private static let key = "headingColorsByTheme"
 
-    /// 0 号是页面底色，1–5 是标题
+    /// 0 号是页面底色（固定用主题的颜色，不能改），1–5 是标题
     static let background = 0
 
     /// 默认颜色：每种主题一套，和背景搭配，标题之间也分得清
@@ -62,6 +63,13 @@ final class Personalization {
             guard let theme = Theme(rawValue: themeName) else { continue }
             custom[theme] = Dictionary(uniqueKeysWithValues: levels.compactMap { k, v in Int(k).map { ($0, v) } })
         }
+        // 2.0.3 起页面底色不能改了：以前改过的底色丢掉，回到主题自己的颜色
+        var droppedBackground = false
+        for theme in Array(custom.keys) where custom[theme]?[Self.background] != nil {
+            custom[theme]?[Self.background] = nil
+            if custom[theme]?.isEmpty == true { custom[theme] = nil }
+            droppedBackground = true
+        }
         // 早一版只存了一套颜色，搬到“浅色”里
         if let old = UserDefaults.standard.dictionary(forKey: "headingColors") as? [String: String] {
             if custom[.light] == nil {
@@ -72,6 +80,7 @@ final class Personalization {
             // 收到通知的编辑器会回头来读 Personalization.shared，而它还没初始化完，会卡死自己（崩溃）
             save(notify: false)
         }
+        if droppedBackground { save(notify: false) } // 同上：初始化中不发通知
     }
 
     /// 某个主题下某级标题现在的颜色
@@ -83,6 +92,7 @@ final class Personalization {
     func hasCustom(theme: Theme) -> Bool { !(custom[theme] ?? [:]).isEmpty }
 
     func setColor(_ hex: String?, level: Int, theme: Theme) {
+        guard level != Self.background else { return } // 底色不能改
         var levels = custom[theme] ?? [:]
         // 选回和默认一样的颜色，就当作没改
         levels[level] = (hex == Self.defaults[theme]?[level]) ? nil : hex
@@ -188,8 +198,8 @@ struct PersonalizationSettingsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(L("底色和标题颜色只改变拾记里显示的样子，不会写进笔记文件。浅色、深色、护眼各存一套。",
-                   "Background and heading colors only change how notes look in PikNote and aren’t saved into your files. Light, Dark, and Sepia each keep their own set."))
+            Text(L("标题颜色只改变拾记里显示的样子，不会写进笔记文件。浅色、深色、护眼各存一套。",
+                   "Heading colors only change how notes look in PikNote and aren’t saved into your files. Light, Dark, and Sepia each keep their own set."))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -201,17 +211,6 @@ struct PersonalizationSettingsView: View {
             .frame(maxWidth: 300)
 
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 10) {
-                GridRow {
-                    Text(L("页面底色", "Background"))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(previewText)
-                        .frame(width: 150, alignment: .leading)
-                    ColorPicker("", selection: binding(for: Personalization.background), supportsOpacity: false)
-                        .labelsHidden()
-                    Button(L("默认", "Default")) { settings.setColor(nil, level: Personalization.background, theme: editing) }
-                        .disabled(!settings.isCustom(Personalization.background, theme: editing))
-                }
-                Divider().gridCellColumns(3)
                 ForEach(1...5, id: \.self) { level in
                     GridRow {
                         Text(L("标题 \(level)", "Heading \(level)"))

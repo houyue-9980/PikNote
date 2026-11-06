@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/houyue-9980/PikNote/releases/latest"><b>下载 Download</b></a>
-  &nbsp;·&nbsp; 当前版本 Version <b>2.0.2</b>
+  &nbsp;·&nbsp; 当前版本 Version <b>2.0.3</b>
   &nbsp;·&nbsp; macOS 15+
   <br><br>
   <a href="#中文">中文</a> &nbsp;|&nbsp; <a href="#english">English</a>
@@ -55,7 +55,7 @@
 
 ### 安装
 
-1. 到 [Releases](https://github.com/houyue-9980/PikNote/releases/latest) 下载 `PikNote-2.0.2.dmg`
+1. 到 [Releases](https://github.com/houyue-9980/PikNote/releases/latest) 下载 `PikNote-2.0.3.dmg`
 2. 打开后，把 **PikNote** 拖进“应用程序”
 3. 第一次打开：拾记没有经过苹果公证，直接双击会提示“无法验证开发者”。请在“应用程序”里**右键点击 PikNote → 打开**，再在弹窗里点“打开”。之后就能正常双击打开了
    - 如果没有“打开”按钮：打开 **系统设置 → 隐私与安全性**，在下面找到关于 PikNote 的提示，点“仍要打开”
@@ -114,7 +114,7 @@ A lightweight native Mac note app: the bookshelf is your only navigation, every 
 
 ### Install
 
-1. Download `PikNote-2.0.2.dmg` from [Releases](https://github.com/houyue-9980/PikNote/releases/latest)
+1. Download `PikNote-2.0.3.dmg` from [Releases](https://github.com/houyue-9980/PikNote/releases/latest)
 2. Open it and drag **PikNote** into Applications
 3. PikNote isn’t notarized by Apple, so double-clicking it the first time says the developer can’t be verified. Instead, **right-click PikNote in Applications → Open**, then click Open. After that it opens normally
    - No Open button? Go to **System Settings → Privacy & Security**, find the message about PikNote near the bottom and click “Open Anyway”
