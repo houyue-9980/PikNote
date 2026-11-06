@@ -64,6 +64,63 @@ final class AppearanceSettings {
 extension View {
     /// 页面底色跟着主题走
     func pikPageBackground() -> some View { modifier(PageBackground()) }
+    /// 侧栏底色：护眼主题用暖色，浅色 / 深色用系统自带的
+    func pikSidebarBackground() -> some View { modifier(SidebarBackground()) }
+    /// 窗口顶部标题栏：护眼主题用暖色，浅色 / 深色用系统自带的
+    func pikToolbarBackground() -> some View { modifier(ToolbarBackground()) }
+}
+
+extension Theme {
+    /// 系统没有“护眼”外观，侧栏和标题栏要自己上色（比页面略深一点，分得出层次）
+    var sidebarColor: Color? { self == .sepia ? Color(red: 0.937, green: 0.902, blue: 0.835) : nil }
+    var toolbarColor: Color? { self == .sepia ? Color(red: 0.957, green: 0.925, blue: 0.863) : nil }
+}
+
+private struct SidebarBackground: ViewModifier {
+    @Environment(\.colorScheme) private var scheme
+    func body(content: Content) -> some View {
+        if let color = AppearanceSettings.shared.effective(scheme).sidebarColor {
+            content.background(color)
+        } else {
+            content
+        }
+    }
+}
+
+private struct ToolbarBackground: ViewModifier {
+    @Environment(\.colorScheme) private var scheme
+    func body(content: Content) -> some View {
+        let theme = AppearanceSettings.shared.effective(scheme)
+        // 窗口本身的底色也要改：悬浮的侧栏四周留着一圈空隙，透出来的就是它
+        let windowColor = theme.sidebarColor.map { NSColor($0) }
+        if let color = theme.toolbarColor {
+            content
+                .toolbarBackground(color, for: .windowToolbar)
+                .toolbarBackgroundVisibility(.visible, for: .windowToolbar)
+                .background(WindowBackgroundSetter(color: windowColor))
+        } else {
+            content.background(WindowBackgroundSetter(color: windowColor))
+        }
+    }
+}
+
+/// 设置所在窗口的底色；nil = 系统默认。主题一变就跟着改
+private struct WindowBackgroundSetter: NSViewRepresentable {
+    let color: NSColor?
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { apply(to: view) }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        apply(to: view)
+    }
+
+    private func apply(to view: NSView) {
+        view.window?.backgroundColor = color ?? .windowBackgroundColor
+    }
 }
 
 private struct PageBackground: ViewModifier {

@@ -21,6 +21,7 @@ struct NoteWindow: View {
             }
         }
         .frame(minWidth: 520, minHeight: 360)
+        .pikToolbarBackground()
         .background(WindowReader { OpenNotes.register(url, window: $0); window = $0 })
         // 重命名：菜单 文件 → 重命名…，或点底部状态栏里的文件名。
         // 改名时这个窗口会先存好、关掉，再用新名字打开

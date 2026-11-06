@@ -61,6 +61,7 @@ struct ShelfWindow: View {
         }
         .frame(minWidth: 520, minHeight: 360)
         .pikPageBackground()
+        .pikToolbarBackground()
         .navigationTitle(L("拾记", "PikNote"))
         .onAppear {
             // 调试用：启动参数 -PikNoteOpen <文件路径> 会直接打开这个文件

@@ -134,6 +134,8 @@ struct OutlineSidebar: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .pikSidebarBackground()
     }
 }
 
