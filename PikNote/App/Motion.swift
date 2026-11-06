@@ -9,6 +9,8 @@ enum Motion {
     static let standard = Animation.easeOut(duration: 0.22)
     /// 带一点点弹性（图标浮起、预览换样子）
     static let springy = Animation.spring(response: 0.3, dampingFraction: 0.72)
+    /// 展开 / 收起（像抽屉一样，开头快、结尾慢慢停住，不回弹）
+    static let drawer = Animation.spring(response: 0.42, dampingFraction: 0.9)
 
     /// 系统要求减弱动态效果吗
     static var reduced: Bool { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }

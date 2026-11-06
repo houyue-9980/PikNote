@@ -98,34 +98,111 @@ struct ShelfRow: View {
     let shelf: Shelf
     /// 从访达拖文件到这一层上
     let onImport: ([URL]) -> Void
+    @Environment(Library.self) private var library
     @State private var targeted = false
+    @State private var hoveringHeader = false
+    /// 收起来的书架（按名字记，换一行一个）；记在这台电脑上，重开软件还是收着的
+    @AppStorage("collapsedShelves") private var collapsedRaw = ""
+    /// 展开时内容有多高（量出来的）：收起 / 展开时在 0 和这个高度之间平滑变化
+    @State private var contentHeight: CGFloat = 0
+
+    private var collapsedNames: Set<String> { Set(collapsedRaw.split(separator: "\n").map(String.init)) }
+    /// 界面上用的收起状态（自己的状态，动画挂在它上面）；和上面存的设置保持一致
+    @State private var collapsed = false
+    @State private var didLoad = false
+
+    /// 点标题：收起 / 展开这一层；按住 ⌥ 点：所有书架一起收起 / 展开
+    private func toggle() {
+        var names = collapsedNames
+        let collapse = !collapsed
+        let targets = NSEvent.modifierFlags.contains(.option) ? library.shelves.map(\.name) : [shelf.name]
+        for name in targets {
+            if collapse { names.insert(name) } else { names.remove(name) }
+        }
+        // 整个窗口一起做动画：不光这一层收起来，下面的书架也平滑地跟上来
+        withPikAnimation(Motion.drawer) { collapsed = collapse }
+        collapsedRaw = names.sorted().joined(separator: "\n") // 存起来；其他书架从这里得知“全部收起”
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                Text(shelf.name)
-                    .font(.system(size: 17, weight: .semibold))
+                Button(action: toggle) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .rotationEffect(.degrees(collapsed ? 0 : 90))
+                            .opacity(hoveringHeader || collapsed ? 1 : 0.45)
+                        Text(shelf.name)
+                            .font(.system(size: 17, weight: .semibold))
+                        if collapsed {
+                            // 收起时：显示有几篇，再露出前几个图标的表情，知道里面大概是什么
+                            Text("\(shelf.items.count)")
+                                .font(.callout).foregroundStyle(.secondary)
+                            HStack(spacing: 2) {
+                                ForEach(shelf.items.prefix(6)) { Text($0.emoji).font(.system(size: 14)) }
+                            }
+                            .transition(.opacity)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .onHover { hoveringHeader = $0 }
+                .pikAnimation(Motion.quick, value: hoveringHeader)
+                .pikAnimation(Motion.drawer, value: collapsed)
+                .help(collapsed ? L("展开这一层（按住 ⌥ 点：全部展开）", "Expand this shelf (⌥-click: expand all)")
+                                : L("收起这一层（按住 ⌥ 点：全部收起）", "Collapse this shelf (⌥-click: collapse all)"))
                 if targeted {
                     Label(L("松手放进“\(shelf.name)”", "Drop to add to “\(shelf.name)”"), systemImage: "plus.circle.fill")
                         .font(.callout)
                         .foregroundStyle(Color.accentColor)
                 }
             }
-            if shelf.items.isEmpty {
-                Text(L("这层还是空的。把文件拖到这里，或者在访达里放进“\(shelf.name)”文件夹。", "This shelf is empty. Drag files here, or put them in the “\(shelf.name)” folder in Finder."))
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-            } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 116, maximum: 116), spacing: 14, alignment: .top)],
-                          alignment: .leading, spacing: 14) {
-                    ForEach(shelf.items) { item in
-                        ShelfTile(item: item)
+            // 内容一直在，只是高度在 0 和实际高度之间变化（像抽屉），下面的书架跟着平滑移动
+                Group {
+                    if shelf.items.isEmpty {
+                        Text(L("这层还是空的。把文件拖到这里，或者在访达里放进“\(shelf.name)”文件夹。", "This shelf is empty. Drag files here, or put them in the “\(shelf.name)” folder in Finder."))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+                    } else {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 116, maximum: 116), spacing: 14, alignment: .top)],
+                                  alignment: .leading, spacing: 14) {
+                            ForEach(shelf.items) { item in
+                                ShelfTile(item: item)
+                            }
+                        }
+                        // 拖动、移进移出时，其他图标平滑让位
+                        .pikAnimation(Motion.springy, value: shelf.items.map(\.id))
                     }
                 }
-                // 拖动、移进移出时，其他图标平滑让位
-                .pikAnimation(Motion.springy, value: shelf.items.map(\.id))
-            }
+                .fixedSize(horizontal: false, vertical: true)
+                .background(GeometryReader { geo in
+                    Color.clear
+                        .onAppear { contentHeight = geo.size.height }
+                        .onChange(of: geo.size.height) { _, h in contentHeight = h }
+                })
+                // 先淡：收起时图标先很快淡掉，展开时等高度撑开了再淡入（不然会和下面的书架叠在一起）
+                .opacity(collapsed ? 0 : 1)
+                .pikAnimation(collapsed ? .easeOut(duration: 0.12) : .easeIn(duration: 0.18).delay(0.16), value: collapsed)
+                // 再收高度：像抽屉一样
+                .frame(height: collapsed ? 0 : contentHeight, alignment: .top)
+                .clipShape(Rectangle()) // 超出当前高度的部分不画出来
+                .allowsHitTesting(!collapsed)
+                .padding(.top, collapsed ? -14 : 0) // 收起时把和标题之间的间距也收掉
+                .pikAnimation(collapsed ? Motion.drawer.delay(0.06) : Motion.drawer, value: collapsed)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
+            collapsed = collapsedNames.contains(shelf.name) // 打开时按存的状态，不播动画
+        }
+        .onChange(of: collapsedRaw) { _, _ in
+            let stored = collapsedNames.contains(shelf.name)
+            if stored != collapsed { withPikAnimation(Motion.drawer) { collapsed = stored } } // 别的书架按 ⌥ 点了“全部收起 / 展开”
         }
         .padding(12)
         .background(
