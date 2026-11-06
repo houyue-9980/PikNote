@@ -1,12 +1,58 @@
 // 书架主界面：每层书架一个大标题，下面是方形表情图标网格。
 import SwiftUI
 
+// MARK: - 主页上拖动图标（app 自己处理，不用系统拖放）
+// 系统拖放松手时，跟着鼠标的小图标要在原地淡出一会儿，看起来像多出一个。
+// 自己处理就没有这个问题：松手时影子直接消失，图标同时出现在新位置。
+
+/// 松手会放到哪里
+enum ShelfDropTarget: Equatable {
+    case before(item: URL, folder: URL) // 放在某个图标前面
+    case end(shelf: URL)                // 放到某层最后
+}
+
+@Observable
+final class ShelfDrag {
+    /// 正在拖的图标；nil = 没在拖
+    var item: ShelfItem?
+    /// 鼠标在书架内容里的位置（坐标系 "shelf"）
+    var location: CGPoint = .zero
+    /// 按下时鼠标离图标中心多远：影子跟着鼠标走时保持这个距离
+    var grab: CGSize = .zero
+    var target: ShelfDropTarget?
+    /// 各个图标、各层书架在书架内容里的位置
+    var tileFrames: [URL: CGRect] = [:]
+    var shelfFrames: [URL: CGRect] = [:]
+
+    /// 鼠标在 point 时，松手会放到哪里
+    func target(at point: CGPoint) -> ShelfDropTarget? {
+        guard let dragged = item?.url else { return nil }
+        if let (url, _) = tileFrames.first(where: { $0.key != dragged && $0.value.contains(point) }) {
+            return .before(item: url, folder: url.deletingLastPathComponent())
+        }
+        if let (url, _) = shelfFrames.first(where: { $0.value.insetBy(dx: -12, dy: -12).contains(point) }) {
+            return .end(shelf: url)
+        }
+        return nil
+    }
+}
+
+struct TileFrameKey: PreferenceKey {
+    static let defaultValue: [URL: CGRect] = [:]
+    static func reduce(value: inout [URL: CGRect], nextValue: () -> [URL: CGRect]) { value.merge(nextValue()) { $1 } }
+}
+struct ShelfFrameKey: PreferenceKey {
+    static let defaultValue: [URL: CGRect] = [:]
+    static func reduce(value: inout [URL: CGRect], nextValue: () -> [URL: CGRect]) { value.merge(nextValue()) { $1 } }
+}
+
 struct ShelfWindow: View {
     @Environment(Library.self) private var library
     @Environment(\.openWindow) private var openWindow
     /// 拖到窗口空白处的文件：等用户选放哪层
     @State private var pendingImport: [URL] = []
     @State private var importMessage: String?
+    @State private var drag = ShelfDrag()
 
     var body: some View {
         @Bindable var library = library
@@ -26,7 +72,19 @@ struct ShelfWindow: View {
                     .padding(.horizontal, 48)
                     .padding(.vertical, 32)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // 拖动中的影子：跟着鼠标走
+                    .overlay(alignment: .topLeading) {
+                        if let item = drag.item {
+                            DragGhost(item: item)
+                                .position(x: drag.location.x - drag.grab.width, y: drag.location.y - drag.grab.height)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .coordinateSpace(name: "shelf")
+                    .onPreferenceChange(TileFrameKey.self) { drag.tileFrames = $0 }
+                    .onPreferenceChange(ShelfFrameKey.self) { drag.shelfFrames = $0 }
                 }
+                .environment(drag)
                 // 拖到空白处（不在任何一层上）：只有一层就直接放进去，否则问放哪层
                 .dropDestination(for: URL.self) { urls, _ in
                     guard !urls.isEmpty else { return false }
@@ -89,7 +147,8 @@ struct ShelfWindow: View {
     }
 
     private func importFiles(_ urls: [URL], into shelf: URL) {
-        importMessage = library.importFiles(urls, into: shelf)
+        // 拖进来 / 从别的书架拖过来：同样不播放让位动画
+        importMessage = withoutAnimation { library.importFiles(urls, into: shelf) }
     }
 }
 
@@ -99,12 +158,16 @@ struct ShelfRow: View {
     /// 从访达拖文件到这一层上
     let onImport: ([URL]) -> Void
     @Environment(Library.self) private var library
+    @Environment(ShelfDrag.self) private var drag
     @State private var targeted = false
     @State private var hoveringHeader = false
     /// 收起来的书架（按名字记，换一行一个）；记在这台电脑上，重开软件还是收着的
     @AppStorage("collapsedShelves") private var collapsedRaw = ""
     /// 展开时内容有多高（量出来的）：收起 / 展开时在 0 和这个高度之间平滑变化
     @State private var contentHeight: CGFloat = 0
+
+    /// 高亮这一层：从访达拖文件进来，或者在 app 里拖图标、松手会放到这层最后
+    private var highlighted: Bool { targeted || drag.target == .end(shelf: shelf.url) }
 
     private var collapsedNames: Set<String> { Set(collapsedRaw.split(separator: "\n").map(String.init)) }
     /// 界面上用的收起状态（自己的状态，动画挂在它上面）；和上面存的设置保持一致
@@ -188,6 +251,8 @@ struct ShelfRow: View {
                 .opacity(collapsed ? 0 : 1)
                 .pikAnimation(collapsed ? .easeOut(duration: 0.12) : .easeIn(duration: 0.18).delay(0.16), value: collapsed)
                 // 再收高度：像抽屉一样
+                // 收起时里面的图标不算拖放目标
+                .transformPreference(TileFrameKey.self) { if collapsed { $0 = [:] } }
                 .frame(height: collapsed ? 0 : contentHeight, alignment: .top)
                 .clipShape(Rectangle()) // 超出当前高度的部分不画出来
                 .allowsHitTesting(!collapsed)
@@ -204,13 +269,16 @@ struct ShelfRow: View {
             let stored = collapsedNames.contains(shelf.name)
             if stored != collapsed { withPikAnimation(Motion.drawer) { collapsed = stored } } // 别的书架按 ⌥ 点了“全部收起 / 展开”
         }
+        .background(GeometryReader { geo in
+            Color.clear.preference(key: ShelfFrameKey.self, value: [shelf.url: geo.frame(in: .named("shelf"))])
+        })
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(targeted ? Color.accentColor.opacity(0.08) : .clear)
-                .strokeBorder(targeted ? Color.accentColor.opacity(0.6) : .clear, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                .fill(highlighted ? Color.accentColor.opacity(0.08) : .clear)
+                .strokeBorder(highlighted ? Color.accentColor.opacity(0.6) : .clear, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
         )
-        .pikAnimation(Motion.quick, value: targeted)
+        .pikAnimation(Motion.quick, value: highlighted)
         .padding(-12) // 高亮框往外扩一点，内容位置不变
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }
@@ -225,6 +293,7 @@ struct ShelfTile: View {
     let item: ShelfItem
     @Environment(\.openWindow) private var openWindow
     @Environment(Library.self) private var library
+    @Environment(ShelfDrag.self) private var drag
     @State private var hovering = false
     @State private var confirmingDelete = false
     @State private var renaming = false
@@ -264,26 +333,60 @@ struct ShelfTile: View {
         )
         .overlay(alignment: .leading) {
             // 别的图标拖到这个图标上：放在它前面，左边一条蓝线提示
-            if dropTargeted { RoundedRectangle(cornerRadius: 1.5).fill(Color.accentColor).frame(width: 3).padding(.vertical, 8).offset(x: -8) }
+            if dropTargeted || drag.target == .before(item: item.url, folder: item.url.deletingLastPathComponent()) {
+                RoundedRectangle(cornerRadius: 1.5).fill(Color.accentColor).frame(width: 3).padding(.vertical, 8).offset(x: -8)
+            }
         }
+        // 正在被拖走：原位置变淡
+        .opacity(drag.item?.id == item.id ? 0.3 : 1)
+        .background(GeometryReader { geo in
+            Color.clear.preference(key: TileFrameKey.self, value: [item.url: geo.frame(in: .named("shelf"))])
+        })
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .pikAnimation(Motion.quick, value: hovering)
         .pikAnimation(Motion.quick, value: dropTargeted)
+        .pikAnimation(Motion.quick, value: drag.item?.id == item.id)
         .onTapGesture { OpenNotes.open(item.url, using: openWindow) } // 单击在新窗口打开
-        // 按住拖：拖到别的书架上就移过去，拖到同一层的别的图标上就调整顺序
-        .draggable(item.url) {
-            VStack(spacing: 6) {
-                TileIcon(emoji: item.emoji, color: item.color, size: 64)
-                Text(item.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
-            }
-            .padding(6)
-        }
+        // 按住拖：拖到别的书架上就移过去，拖到同一层的别的图标上就调整顺序（app 自己处理，见文件开头）
+        .gesture(
+            DragGesture(minimumDistance: 4, coordinateSpace: .named("shelf"))
+                .onChanged { value in
+                    if drag.item == nil {
+                        drag.item = item
+                        // 记下按下的点离图标中心多远，影子跟着走时不会“跳”到鼠标正中
+                        if let frame = drag.tileFrames[item.url] {
+                            drag.grab = CGSize(width: value.startLocation.x - frame.midX, height: value.startLocation.y - frame.midY)
+                        }
+                    }
+                    drag.location = value.location
+                    let target = drag.target(at: value.location)
+                    if target != drag.target { withPikAnimation(Motion.quick) { drag.target = target } }
+                }
+                .onEnded { value in
+                    let target = drag.target(at: value.location)
+                    // 影子消失、图标出现在新位置，都在同一瞬间，不播动画
+                    withoutAnimation {
+                        do {
+                            switch target {
+                            case let .before(other, folder): try library.place(item.url, in: folder, before: other)
+                            case let .end(shelf): try library.place(item.url, in: shelf)
+                            case nil: break
+                            }
+                        } catch { errorMessage = error.localizedDescription }
+                        drag.item = nil
+                        drag.target = nil
+                    }
+                }
+        )
         .dropDestination(for: URL.self) { urls, _ in
             let folder = item.url.deletingLastPathComponent()
             do {
-                for url in urls where !url.isDirectory && url.standardizedFileURL != item.url.standardizedFileURL {
-                    try library.place(url, in: folder, before: item.url)
+                // 拖放换位置：不播放让位动画（见 withoutAnimation 的说明）
+                try withoutAnimation {
+                    for url in urls where !url.isDirectory && url.standardizedFileURL != item.url.standardizedFileURL {
+                        try library.place(url, in: folder, before: item.url)
+                    }
                 }
             } catch { errorMessage = error.localizedDescription }
             return true
@@ -365,5 +468,24 @@ struct EmptyShelfView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// 拖动时跟着鼠标的影子：和书架上的图标长得一样，稍微浮起
+private struct DragGhost: View {
+    let item: ShelfItem
+    var body: some View {
+        VStack(spacing: 10) {
+            TileIcon(emoji: item.emoji, color: item.color)
+                .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
+            Text(item.title)
+                .font(.system(size: 13, weight: .medium))
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 104)
+        }
+        .padding(.vertical, 10)
+        .frame(width: 116)
+        .scaleEffect(1.05)
     }
 }

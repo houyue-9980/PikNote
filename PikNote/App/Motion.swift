@@ -66,3 +66,11 @@ private struct PressableBody: View {
             .pikAnimation(Motion.quick, value: focused)
     }
 }
+
+/// 这一下改动不要任何动画（连 .animation 修饰的也不动）。
+/// 拖放松手时用：系统正在让跟着鼠标的小图标淡出，图标再“飞”过去就会出现两个
+func withoutAnimation<Result>(_ body: () throws -> Result) rethrows -> Result {
+    var transaction = Transaction()
+    transaction.disablesAnimations = true
+    return try withTransaction(transaction, body)
+}
