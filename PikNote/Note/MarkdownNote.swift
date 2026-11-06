@@ -311,9 +311,31 @@ struct MarkdownEditorView: NSViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(doc: doc) }
 
+    /// 在页面最开始执行的一小段脚本：设好主题和颜色（文字都转成 JSON，任何字符都不会出错）
+    static func themeScript(_ theme: String) -> WKUserScript {
+        let colors = Personalization.shared.forEditor(theme: Theme(rawValue: theme) ?? .light)
+        let json = { (value: Any) -> String in
+            (try? JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed])).flatMap { String(data: $0, encoding: .utf8) } ?? "null"
+        }
+        let source = """
+        (function () {
+          var root = document.documentElement, colors = \(json(colors));
+          root.dataset.theme = \(json(theme));
+          if (colors["0"]) root.style.setProperty("--bg", colors["0"]);
+          for (var level = 1; level <= 5; level++) {
+            if (colors[String(level)]) root.style.setProperty("--h" + level + "-color", colors[String(level)]);
+          }
+        })();
+        """
+        return WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+    }
+
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.userContentController.add(context.coordinator, name: "piknote")
+        // 页面画出第一帧之前就用上现在的主题和底色、标题颜色。
+        // 不然页面默认是浅色（白底），要等加载完 Swift 才告诉它主题，深色 / 护眼打开笔记时会白一下
+        config.userContentController.addUserScript(Self.themeScript(theme))
         let web = EditorWebView(frame: .zero, configuration: config)
         // 从访达拖进来的图片：复制进 assets，插在松手的位置
         web.onDropImages = { [weak web, doc] files, point in

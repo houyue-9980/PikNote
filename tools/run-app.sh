@@ -4,9 +4,10 @@
 set -e
 cd "${0:A:h}/.."
 
-xcodebuild -project PikNote.xcodeproj -scheme PikNote -configuration Debug -derivedDataPath build -quiet build
+# 编译目录名以 .noindex 结尾：系统不会索引它，编译出来的开发版就不会跑进启动台
+xcodebuild -project PikNote.xcodeproj -scheme PikNote -configuration Debug -derivedDataPath build/DerivedData.noindex -quiet build
 
-APP=build/Build/Products/Debug/PikNote.app
+APP=build/DerivedData.noindex/Build/Products/Debug/PikNote.app
 # 只管开发版（build/…/Debug/PikNote.app），不碰装在“应用程序”里的正式版
 running() { pgrep -f "Debug/PikNote.app/Contents/MacOS/PikNote" >/dev/null }
 
