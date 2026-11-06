@@ -1,0 +1,448 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0683B188AAFFB49A4D5955DB /* FolderWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = D688AF8052C00324A1DDE2CD /* FolderWatcher.swift */; };
+		097533FC02F0F0C75BBAE189 /* ShelfSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C49D893C07CB3EB60919CF05 /* ShelfSettings.swift */; };
+		14C97B79B18D1672105E482F /* Personalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D97BC08CEB333EBAAE6FC09 /* Personalization.swift */; };
+		19A8FD45CB61A0185F0FCBA2 /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4C156C2C018A79BFC55670 /* Appearance.swift */; };
+		2C6F3E601E5DF811B18D3FE4 /* OpenNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7F209AC7B7D63FF65EBA82 /* OpenNotes.swift */; };
+		4CCB7BF2446F824E0BECAD8F /* AppearancePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82A23C67164C5C093F64724 /* AppearancePicker.swift */; };
+		567B1AE9A836D412AAEB46D4 /* NewNoteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C02F9D9CF37659359984F92E /* NewNoteSheet.swift */; };
+		65EA8D277084857D96F016B7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 24C397EA931B694E0D28F5FD /* InfoPlist.strings */; };
+		75098864D2523E71D735E206 /* MarkdownNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = A48EB560B74E771414759F95 /* MarkdownNote.swift */; };
+		798FE0BEB3F8CF58B39B921B /* Language.swift in Sources */ = {isa = PBXBuildFile; fileRef = C601B53E5EB1BA3184986D16 /* Language.swift */; };
+		80225F3138E43579BA0D7AE0 /* EditorWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2772A7CE070E4D7F0DEE66 /* EditorWebView.swift */; };
+		81482270CBD9123910B608F5 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = D627B828B8E2CF5B002FFAB3 /* Library.swift */; };
+		853B551AF287D87D4C08263D /* editor in Resources */ = {isa = PBXBuildFile; fileRef = 3DD670BDB19F29DA16D5A6B5 /* editor */; };
+		938CE4652D8A53BF1C7D1540 /* FormatBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D49A5E6938A9783EA96395 /* FormatBar.swift */; };
+		9A20F987DF621F97EEFBFD85 /* ShelfManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FE6F4DBD8F56C01687712D /* ShelfManager.swift */; };
+		AF5A4CBB7BCA039ECE00D33A /* Tutorial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50647935F537B55A6D35C9C6 /* Tutorial.swift */; };
+		C09513629363D4267C8BC531 /* ShelfWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F2288EE0C95FE49D4EA1E2 /* ShelfWindow.swift */; };
+		CFEC69AD18E6850CF73F3644 /* NoteWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAABE13D41DAB42C3294139A /* NoteWindow.swift */; };
+		DFAD03F89904741519AF2DDC /* OutlineSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1842C1C770D6AC3B74E1CDF8 /* OutlineSidebar.swift */; };
+		E617E8E1020E23184D4AA850 /* PikNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AEC8A0D845056536811B2E /* PikNoteApp.swift */; };
+		F3A584FCBE0358769CEC33BE /* Zoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DFAB5A70FABC92D9C693CB6 /* Zoom.swift */; };
+		FA3C732A194824008FED53BC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AFE64060DAE4EF5CB81DF20B /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		13FE93611D008223422281A9 /* PikNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PikNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1842C1C770D6AC3B74E1CDF8 /* OutlineSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineSidebar.swift; sourceTree = "<group>"; };
+		1E4C156C2C018A79BFC55670 /* Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Appearance.swift; sourceTree = "<group>"; };
+		3DD670BDB19F29DA16D5A6B5 /* editor */ = {isa = PBXFileReference; lastKnownFileType = folder; name = editor; path = PikNote/Resources/editor; sourceTree = SOURCE_ROOT; };
+		4412EE4F5D34BA70DD44AAD9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		50647935F537B55A6D35C9C6 /* Tutorial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tutorial.swift; sourceTree = "<group>"; };
+		7D97BC08CEB333EBAAE6FC09 /* Personalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Personalization.swift; sourceTree = "<group>"; };
+		84DC9C5368B21474029D34AF /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		88F2288EE0C95FE49D4EA1E2 /* ShelfWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfWindow.swift; sourceTree = "<group>"; };
+		8B7F209AC7B7D63FF65EBA82 /* OpenNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenNotes.swift; sourceTree = "<group>"; };
+		93AEC8A0D845056536811B2E /* PikNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PikNoteApp.swift; sourceTree = "<group>"; };
+		9A2772A7CE070E4D7F0DEE66 /* EditorWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebView.swift; sourceTree = "<group>"; };
+		9DFAB5A70FABC92D9C693CB6 /* Zoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Zoom.swift; sourceTree = "<group>"; };
+		A48EB560B74E771414759F95 /* MarkdownNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownNote.swift; sourceTree = "<group>"; };
+		A5FE6F4DBD8F56C01687712D /* ShelfManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfManager.swift; sourceTree = "<group>"; };
+		A75809AD57A68BE563AC7E77 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A9D49A5E6938A9783EA96395 /* FormatBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBar.swift; sourceTree = "<group>"; };
+		AAABE13D41DAB42C3294139A /* NoteWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteWindow.swift; sourceTree = "<group>"; };
+		AFE64060DAE4EF5CB81DF20B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C02F9D9CF37659359984F92E /* NewNoteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewNoteSheet.swift; sourceTree = "<group>"; };
+		C49D893C07CB3EB60919CF05 /* ShelfSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSettings.swift; sourceTree = "<group>"; };
+		C601B53E5EB1BA3184986D16 /* Language.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Language.swift; sourceTree = "<group>"; };
+		C82A23C67164C5C093F64724 /* AppearancePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearancePicker.swift; sourceTree = "<group>"; };
+		D627B828B8E2CF5B002FFAB3 /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
+		D688AF8052C00324A1DDE2CD /* FolderWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderWatcher.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0BF66BA7434A9C1A45CDEBAC /* PikNote */ = {
+			isa = PBXGroup;
+			children = (
+				A75809AD57A68BE563AC7E77 /* Info.plist */,
+				2A8014D8DED47C18BF1843F2 /* App */,
+				72D7448B8B0A2F56163DBCC9 /* Library */,
+				F356E0E81E8DED523B9A3084 /* Note */,
+				50B1CC95905C4D3B503C74BC /* Resources */,
+				EF1DAE8B1354B3C4EAAAA3D6 /* Shelf */,
+			);
+			path = PikNote;
+			sourceTree = "<group>";
+		};
+		2A8014D8DED47C18BF1843F2 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				1E4C156C2C018A79BFC55670 /* Appearance.swift */,
+				C601B53E5EB1BA3184986D16 /* Language.swift */,
+				7D97BC08CEB333EBAAE6FC09 /* Personalization.swift */,
+				93AEC8A0D845056536811B2E /* PikNoteApp.swift */,
+				9DFAB5A70FABC92D9C693CB6 /* Zoom.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		50B1CC95905C4D3B503C74BC /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AFE64060DAE4EF5CB81DF20B /* Assets.xcassets */,
+				3DD670BDB19F29DA16D5A6B5 /* editor */,
+				24C397EA931B694E0D28F5FD /* InfoPlist.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		72D7448B8B0A2F56163DBCC9 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				D688AF8052C00324A1DDE2CD /* FolderWatcher.swift */,
+				D627B828B8E2CF5B002FFAB3 /* Library.swift */,
+				C49D893C07CB3EB60919CF05 /* ShelfSettings.swift */,
+				50647935F537B55A6D35C9C6 /* Tutorial.swift */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		B1539A9ABE4D6517FD1C6A76 = {
+			isa = PBXGroup;
+			children = (
+				0BF66BA7434A9C1A45CDEBAC /* PikNote */,
+				C4519AC9E52C8D1C78665991 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C4519AC9E52C8D1C78665991 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				13FE93611D008223422281A9 /* PikNote.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EF1DAE8B1354B3C4EAAAA3D6 /* Shelf */ = {
+			isa = PBXGroup;
+			children = (
+				C82A23C67164C5C093F64724 /* AppearancePicker.swift */,
+				C02F9D9CF37659359984F92E /* NewNoteSheet.swift */,
+				A5FE6F4DBD8F56C01687712D /* ShelfManager.swift */,
+				88F2288EE0C95FE49D4EA1E2 /* ShelfWindow.swift */,
+			);
+			path = Shelf;
+			sourceTree = "<group>";
+		};
+		F356E0E81E8DED523B9A3084 /* Note */ = {
+			isa = PBXGroup;
+			children = (
+				9A2772A7CE070E4D7F0DEE66 /* EditorWebView.swift */,
+				A9D49A5E6938A9783EA96395 /* FormatBar.swift */,
+				A48EB560B74E771414759F95 /* MarkdownNote.swift */,
+				AAABE13D41DAB42C3294139A /* NoteWindow.swift */,
+				8B7F209AC7B7D63FF65EBA82 /* OpenNotes.swift */,
+				1842C1C770D6AC3B74E1CDF8 /* OutlineSidebar.swift */,
+			);
+			path = Note;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AFAA207A297E9FD1CDDF64DC /* PikNote */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6998F37F1576C0B7190A3D88 /* Build configuration list for PBXNativeTarget "PikNote" */;
+			buildPhases = (
+				4D5BD09169E7E9397D99A56A /* Sources */,
+				960A1C7F241C0E86A2DAE7FF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PikNote;
+			packageProductDependencies = (
+			);
+			productName = PikNote;
+			productReference = 13FE93611D008223422281A9 /* PikNote.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C9B631FC0FE00B7FB41F9924 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					AFAA207A297E9FD1CDDF64DC = {
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 5915B4C34D378D89156EEF26 /* Build configuration list for PBXProject "PikNote" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				"zh-Hans",
+			);
+			mainGroup = B1539A9ABE4D6517FD1C6A76;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C4519AC9E52C8D1C78665991 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AFAA207A297E9FD1CDDF64DC /* PikNote */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		960A1C7F241C0E86A2DAE7FF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA3C732A194824008FED53BC /* Assets.xcassets in Resources */,
+				65EA8D277084857D96F016B7 /* InfoPlist.strings in Resources */,
+				853B551AF287D87D4C08263D /* editor in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4D5BD09169E7E9397D99A56A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19A8FD45CB61A0185F0FCBA2 /* Appearance.swift in Sources */,
+				4CCB7BF2446F824E0BECAD8F /* AppearancePicker.swift in Sources */,
+				80225F3138E43579BA0D7AE0 /* EditorWebView.swift in Sources */,
+				0683B188AAFFB49A4D5955DB /* FolderWatcher.swift in Sources */,
+				938CE4652D8A53BF1C7D1540 /* FormatBar.swift in Sources */,
+				798FE0BEB3F8CF58B39B921B /* Language.swift in Sources */,
+				81482270CBD9123910B608F5 /* Library.swift in Sources */,
+				75098864D2523E71D735E206 /* MarkdownNote.swift in Sources */,
+				567B1AE9A836D412AAEB46D4 /* NewNoteSheet.swift in Sources */,
+				CFEC69AD18E6850CF73F3644 /* NoteWindow.swift in Sources */,
+				2C6F3E601E5DF811B18D3FE4 /* OpenNotes.swift in Sources */,
+				DFAD03F89904741519AF2DDC /* OutlineSidebar.swift in Sources */,
+				14C97B79B18D1672105E482F /* Personalization.swift in Sources */,
+				E617E8E1020E23184D4AA850 /* PikNoteApp.swift in Sources */,
+				9A20F987DF621F97EEFBFD85 /* ShelfManager.swift in Sources */,
+				097533FC02F0F0C75BBAE189 /* ShelfSettings.swift in Sources */,
+				C09513629363D4267C8BC531 /* ShelfWindow.swift in Sources */,
+				AF5A4CBB7BCA039ECE00D33A /* Tutorial.swift in Sources */,
+				F3A584FCBE0358769CEC33BE /* Zoom.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		24C397EA931B694E0D28F5FD /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4412EE4F5D34BA70DD44AAD9 /* en */,
+				84DC9C5368B21474029D34AF /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0FCE8A59B4AEDC63E6E1A5BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = PikNote/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.houyue9980.piknote;
+				PRODUCT_NAME = PikNote;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		5788E96D3ADAF5421B1EABAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = PikNote/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.houyue9980.piknote.dev;
+				PRODUCT_NAME = PikNote;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D5ED7C70566BDDC6D2E86452 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		E22F2538C2BA32925011FEC6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5915B4C34D378D89156EEF26 /* Build configuration list for PBXProject "PikNote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E22F2538C2BA32925011FEC6 /* Debug */,
+				D5ED7C70566BDDC6D2E86452 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6998F37F1576C0B7190A3D88 /* Build configuration list for PBXNativeTarget "PikNote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5788E96D3ADAF5421B1EABAF /* Debug */,
+				0FCE8A59B4AEDC63E6E1A5BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C9B631FC0FE00B7FB41F9924 /* Project object */;
+}

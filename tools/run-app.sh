@@ -1,0 +1,23 @@
+#!/bin/zsh
+# 编译并重新打开拾记：先编译，再退出正在运行的旧版本（确认真的退出了），最后打开新版本。
+# 用法：tools/run-app.sh [启动参数…]
+set -e
+cd "${0:A:h}/.."
+
+xcodebuild -project PikNote.xcodeproj -scheme PikNote -configuration Debug -derivedDataPath build -quiet build
+
+APP=build/Build/Products/Debug/PikNote.app
+# 只管开发版（build/…/Debug/PikNote.app），不碰装在“应用程序”里的正式版
+running() { pgrep -f "Debug/PikNote.app/Contents/MacOS/PikNote" >/dev/null }
+
+if running; then
+  osascript -e 'tell application id "io.github.houyue9980.piknote.dev" to quit' >/dev/null 2>&1 || true
+  for i in {1..10}; do running || break; sleep 0.5; done
+fi
+if running; then
+  echo "⚠️ 旧版本还开着（可能有面板没关），请先手动退出拾记（⌘Q），再运行一次。" >&2
+  exit 1
+fi
+
+open "$APP" --args "$@"
+echo "✅ 已打开新版本"

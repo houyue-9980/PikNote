@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <title>PikNote Editor</title>
+  <style>
+    /* ---------- 主题：浅色 / 深色 / 护眼，由 Swift 外壳设置 <html data-theme="…"> ---------- */
+    :root, :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #fff; --text: #1d1d1f; --muted: #6e6e73; --faint: #8a8a8e;
+      --subtle: #f5f5f7; --hover: #ececf0; --line: #ececf0; --border: #ddd;
+      --link: #2463d1; --mark: #fff1a8; --blank: #ffe58f; --sel: #e8f0fe; --sel-border: #b6cdf7;
+      --panel: #fff; --panel-border: #d9d9de; --foot: #fafafa;
+      --shadow: 0 16px 48px rgba(0,0,0,.18); --backdrop: rgba(0,0,0,.08);
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #1e1e1e; --text: #e6e6e6; --muted: #a1a1a6; --faint: #8a8a8e;
+      --subtle: #2a2a2c; --hover: #3a3a3c; --line: #343436; --border: #444446;
+      --link: #6ea8ff; --mark: #6b5a12; --blank: #8a6d10; --sel: #26395a; --sel-border: #3d5a8c;
+      --panel: #2a2a2c; --panel-border: #444446; --foot: #252527;
+      --shadow: 0 16px 48px rgba(0,0,0,.5); --backdrop: rgba(0,0,0,.35);
+    }
+    :root[data-theme="sepia"] {
+      color-scheme: light;
+      --bg: #f8f1e3; --text: #3b3127; --muted: #7a6c5b; --faint: #978871;
+      --subtle: #efe5d1; --hover: #e9dcc2; --line: #e6d9bf; --border: #dccfb6;
+      --link: #2f5fb3; --mark: #f1d77a; --blank: #f1d77a; --sel: #e4d8bd; --sel-border: #c9b78f;
+      --panel: #fbf6ea; --panel-border: #dccfb6; --foot: #f4ecdb;
+      --shadow: 0 16px 48px rgba(80,60,20,.18); --backdrop: rgba(60,40,10,.08);
+    }
+    
+    /* 正文字体和行间距可以在 设置 → 个性化 里改 */
+    body { margin: 0; font-size: 15px; line-height: var(--line-height, 1.7);
+      font-family: var(--body-font, -apple-system, "PingFang SC", sans-serif); color: var(--text); background: var(--bg); }
+    /* 不限制宽度：窗口多宽，一行就写多宽（Markdown 本来就不分页） */
+    #editor { margin: 0; padding: 24px 48px 120px; }
+    .ProseMirror { outline: none; }
+    .ProseMirror h1, .ProseMirror h2, .ProseMirror h3 { scroll-margin-top: 16px; line-height: 1.35; }
+    .ProseMirror h1 { font-size: 26px; margin: 0.6em 0 0.5em; }
+    .ProseMirror h2 { font-size: 19px; margin: 1.3em 0 0.5em; }
+    .ProseMirror h3 { font-size: 16px; margin: 1.2em 0 0.4em; }
+    .ProseMirror h4 { font-size: 15px; margin: 1.1em 0 0.4em; }
+    .ProseMirror h5 { font-size: 14px; margin: 1em 0 0.3em; }
+    .ProseMirror h4, .ProseMirror h5 { scroll-margin-top: 16px; line-height: 1.4; }
+    /* 个性化里设置的标题颜色（没设置就跟着主题的文字颜色） */
+    .ProseMirror h1 { color: var(--h1-color, inherit); }
+    .ProseMirror h2 { color: var(--h2-color, inherit); }
+    .ProseMirror h3 { color: var(--h3-color, inherit); }
+    .ProseMirror h4 { color: var(--h4-color, inherit); }
+    .ProseMirror h5 { color: var(--h5-color, inherit); }
+    .ProseMirror a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; cursor: text; }
+    body.cmd .ProseMirror a { cursor: pointer; }
+    .ProseMirror mark { background: var(--mark); color: inherit; padding: 0 1px; border-radius: 2px; }
+    .ProseMirror img { max-width: 100%; height: auto; border-radius: 6px; vertical-align: bottom; }
+    .ProseMirror img.image-selected, .ProseMirror img.ProseMirror-selectednode { outline: 3px solid #4b8df8; outline-offset: 2px; }
+    .ProseMirror hr { border: none; border-top: 1px solid var(--border); margin: 1.5em 0; }
+    .ProseMirror th { background: var(--subtle); text-align: left; }
+    .ProseMirror .selectedCell { background: var(--sel); }
+    .ProseMirror pre { background: var(--subtle); padding: 12px 14px; border-radius: 8px; overflow-x: auto; }
+    .ProseMirror code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+    .ProseMirror blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--border); color: var(--muted); }
+    .ProseMirror table { border-collapse: collapse; }
+    .ProseMirror td, .ProseMirror th { border: 1px solid var(--border); padding: 4px 10px; }
+    /* 段间距可以在 设置 → 个性化 里改（默认 0.3 倍字号）；浏览器默认的段落上下空一整行，太稀 */
+    .ProseMirror > p { margin: 0 0 calc(var(--para-gap, 0.3) * 1em); }
+    .ProseMirror li > p { margin: 0.15em 0; }
+    .ProseMirror td > p, .ProseMirror th > p { margin: 0; }
+    /* 待办：勾选框和文字在同一行 */
+    .ProseMirror li[data-item-type="task"] { list-style: none; display: flex; gap: 0.4em; align-items: baseline; margin-left: -1.2em; }
+    .ProseMirror li[data-item-type="task"]::before { content: "☐"; cursor: pointer; }
+    .ProseMirror li[data-item-type="task"][data-checked="true"]::before { content: "☑"; }
+    .ProseMirror li[data-item-type="task"][data-checked="true"] > p { color: var(--faint); text-decoration: line-through; }
+
+    /* ---------- 公式 ---------- */
+    .math-inline { padding: 0 2px; border-radius: 4px; cursor: default; }
+    .math-block { display: block; text-align: center; padding: 6px 0; margin: 0.6em 0; border-radius: 8px; cursor: default; overflow-x: auto; }
+    .math-inline:hover, .math-block:hover { background: var(--subtle); }
+    .math-selected { background: var(--sel) !important; outline: 1px solid var(--sel-border); }
+    .math-empty { color: var(--faint); font-size: 13px; background: var(--subtle); padding: 2px 8px; }
+    .math-block.math-empty { padding: 14px; }
+    .math-literal { cursor: text; }
+    .katex { font-size: 1.08em; }
+
+    /* 双击公式弹出的编辑框 */
+    .math-editor { position: absolute; z-index: 20; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+      box-shadow: var(--shadow); padding: 10px; box-sizing: border-box; }
+    .math-editor-preview { text-align: center; padding: 8px 4px 10px; min-height: 28px; overflow-x: auto; }
+    .math-editor textarea { width: 100%; box-sizing: border-box; resize: none; border: 1px solid var(--panel-border); background: var(--bg); color: var(--text); border-radius: 7px;
+      padding: 7px 9px; font: 13px/1.5 ui-monospace, Menlo, monospace; outline: none; }
+    .math-editor textarea:focus { border-color: #4b8df8; box-shadow: 0 0 0 3px rgba(75,141,248,.18); }
+    .math-editor-hint { font-size: 11px; color: var(--faint); margin-top: 6px; }
+
+    /* ---------- 公式快捷栏（⌘⇧M） ---------- */
+    .qb-backdrop { position: fixed; inset: 0; z-index: 30; background: var(--backdrop); display: flex; justify-content: center; align-items: flex-start; padding-top: 48px; }
+    .qb { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 80px); display: flex; flex-direction: column; background: var(--panel); color: var(--text);
+      border-radius: 14px; box-shadow: var(--shadow), 0 0 0 1px var(--panel-border); overflow: hidden; font-size: 13px; }
+    .qb-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .qb-fx { width: 30px; height: 30px; border-radius: 8px; background: #2f6fde; color: #fff; display: grid; place-items: center;
+      font: italic 600 14px Georgia, serif; flex: none; }
+    .qb-input { flex: 1; border: none; outline: none; font-size: 18px; font-weight: 600; background: transparent; min-width: 0; color: var(--text); }
+    .qb-tip { color: var(--faint); font-size: 12px; white-space: nowrap; }
+    .qb-body { display: flex; min-height: 0; flex: 1; }
+    .qb-list-wrap { width: 45%; border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+    .qb-list { flex: 1; overflow-y: auto; padding: 6px; max-height: 300px; }
+    .qb-item { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 8px; cursor: default; }
+    .qb-item.on { background: var(--hover); }
+    .qb-item-tex { width: 72px; flex: none; overflow: hidden; font-size: 12px; white-space: nowrap; }
+    .qb-item-tex .katex { font-size: 1em; }
+    .qb-zh { font-weight: 600; }
+    .qb-en { color: var(--faint); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .qb-item-text { min-width: 0; }
+    .qb-empty { color: var(--faint); padding: 20px; text-align: center; }
+    .qb-raw-tip { color: var(--faint); font-size: 12px; padding: 10px 16px; }
+    .qb-side { flex: 1; padding: 14px 18px; min-width: 0; overflow-y: auto; }
+    .qb-label { color: var(--muted); font-size: 12px; margin: 2px 0 8px; }
+    .qb-preview { background: var(--subtle); border-radius: 10px; min-height: 90px; display: grid; place-items: center; padding: 12px; margin-bottom: 14px; overflow-x: auto; }
+    .qb-preview .katex { font-size: 1.5em; }
+    .qb-code { background: var(--subtle); border-radius: 8px; padding: 9px 11px; font: 12.5px/1.5 ui-monospace, Menlo, monospace; word-break: break-all; }
+    .qb-code mark { background: var(--blank); color: inherit; border-radius: 3px; padding: 0 1px; }
+    .qb-note { color: var(--faint); font-size: 12px; margin: 8px 0 14px; }
+    .qb-mode { display: flex; align-items: center; gap: 12px; }
+    .qb-mode .qb-label { margin: 0; }
+    .qb-seg { display: inline-flex; background: var(--hover); border-radius: 8px; padding: 2px; }
+    .qb-seg button { border: none; background: transparent; padding: 5px 12px; border-radius: 6px; font-size: 12.5px; color: var(--text); }
+    .qb-seg button.on { background: var(--panel); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+    .qb-foot { display: flex; gap: 16px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); background: var(--foot); color: var(--muted); font-size: 12px; flex-wrap: wrap; }
+    .qb-spacer { flex: 1; }
+    kbd { font: 11px -apple-system, sans-serif; border: 1px solid var(--panel-border); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; margin-right: 3px; background: var(--panel); color: var(--text); }
+  </style>
+  <link rel="stylesheet" href="katex/katex.min.css">
+</head>
+<body>
+  <div id="editor"></div>
+  <script src="editor.js"></script>
+  <script>
+    // 按住 ⌘ 时链接变成手指光标，提示可以点开
+    addEventListener('keydown', (e) => document.body.classList.toggle('cmd', e.metaKey))
+    addEventListener('keyup', (e) => document.body.classList.toggle('cmd', e.metaKey))
+    addEventListener('blur', () => document.body.classList.remove('cmd'))
+  </script>
+</body>
+</html>

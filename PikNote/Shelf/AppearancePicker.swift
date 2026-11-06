@@ -1,0 +1,132 @@
+// 选图标和底色（新建笔记、书架管理共用）
+import SwiftUI
+
+struct AppearancePicker: View {
+    @Binding var emoji: String
+    @Binding var color: ShelfColor
+
+    /// 12 个常用表情（和设计稿一致）
+    static let commonEmojis = ["📊", "🧮", "💻", "✍️", "📚", "🔬", "🌍", "🎵", "💡", "✈️", "🍳", "🏀"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            field(L("图标", "Icon")) {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(34), spacing: 4), count: 10), alignment: .leading, spacing: 4) {
+                    ForEach(Self.commonEmojis, id: \.self) { e in emojiButton(e) }
+                    // 不在常用里的表情（比如从系统表情面板选的）也显示出来
+                    if !Self.commonEmojis.contains(emoji) { emojiButton(emoji) }
+                    // “…”：打开系统表情面板，选中的表情直接交给这个按钮
+                    EmojiPaletteButton { emoji = $0 }
+                        .frame(width: 34, height: 34)
+                        .help(L("更多表情", "More Emoji"))
+                }
+            }
+
+            field(L("底色", "Color")) {
+                HStack(spacing: 10) {
+                    ForEach(ShelfColor.allCases, id: \.self) { c in
+                        Circle()
+                            .fill(c.color)
+                            .overlay(Circle().strokeBorder(.black.opacity(0.08)))
+                            .frame(width: 24, height: 24)
+                            .padding(3)
+                            .overlay(Circle().strokeBorder(c == color ? Color.accentColor : .clear, lineWidth: 2))
+                            .contentShape(Circle())
+                            .onTapGesture { color = c }
+                    }
+                }
+            }
+        }
+    }
+
+    private func emojiButton(_ e: String) -> some View {
+        Button { emoji = e } label: {
+            Text(e).font(.system(size: 20)).frame(width: 34, height: 34)
+                .background(
+                    RoundedRectangle(cornerRadius: 7)
+                        .strokeBorder(e == emoji ? Color.accentColor : .clear, lineWidth: 2)
+                        .background(RoundedRectangle(cornerRadius: 7).fill(e == emoji ? Color.accentColor.opacity(0.1) : .clear))
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.callout).foregroundStyle(.secondary)
+            content()
+        }
+    }
+}
+
+/// “…”按钮：点一下打开系统表情面板，面板贴着按钮弹出；选中的表情交给 onPick。
+/// 原理：按钮自己当“输入框”接收表情面板打出来的字，但不显示光标。
+struct EmojiPaletteButton: NSViewRepresentable {
+    let onPick: (String) -> Void
+
+    func makeNSView(context: Context) -> EmojiCatcherView {
+        let view = EmojiCatcherView()
+        view.onPick = onPick
+        return view
+    }
+
+    func updateNSView(_ view: EmojiCatcherView, context: Context) {
+        view.onPick = onPick
+    }
+}
+
+final class EmojiCatcherView: NSView, NSTextInputClient {
+    var onPick: ((String) -> Void)?
+    private var hovering = false { didSet { needsDisplay = true } }
+
+    override var acceptsFirstResponder: Bool { true }
+    override var focusRingType: NSFocusRingType { get { .none } set {} }
+
+    override func updateTrackingAreas() {
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect], owner: self))
+    }
+    override func mouseEntered(with event: NSEvent) { hovering = true }
+    override func mouseExited(with event: NSEvent) { hovering = false }
+
+    override func mouseDown(with event: NSEvent) {
+        window?.makeFirstResponder(self)
+        NSApp.orderFrontCharacterPalette(self)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        if hovering {
+            NSColor.labelColor.withAlphaComponent(0.07).setFill()
+            NSBezierPath(roundedRect: bounds, xRadius: 7, yRadius: 7).fill()
+        }
+        let text = NSAttributedString(string: "…", attributes: [
+            .font: NSFont.systemFont(ofSize: 18, weight: .semibold),
+            .foregroundColor: NSColor.labelColor,
+        ])
+        let size = text.size()
+        text.draw(at: NSPoint(x: (bounds.width - size.width) / 2, y: (bounds.height - size.height) / 2 + 3))
+    }
+
+    // MARK: 接收表情面板的输入
+
+    func insertText(_ string: Any, replacementRange: NSRange) {
+        let text = (string as? NSAttributedString)?.string ?? (string as? String) ?? ""
+        if let last = text.last { onPick?(String(last)) }
+        window?.makeFirstResponder(nil)
+    }
+
+    /// 告诉表情面板“光标”在哪：就是这个按钮的位置，面板会贴着它弹出
+    func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
+        guard let window else { return .zero }
+        return window.convertToScreen(convert(bounds, to: nil))
+    }
+
+    func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {}
+    func unmarkText() {}
+    func selectedRange() -> NSRange { NSRange(location: 0, length: 0) }
+    func markedRange() -> NSRange { NSRange(location: NSNotFound, length: 0) }
+    func hasMarkedText() -> Bool { false }
+    func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? { nil }
+    func validAttributesForMarkedText() -> [NSAttributedString.Key] { [] }
+    func characterIndex(for point: NSPoint) -> Int { 0 }
+}
